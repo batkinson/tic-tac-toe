@@ -1,0 +1,144 @@
+<html>
+  <head>
+
+    <script language="javascript">
+
+      // Constructs the id of the input element for the specified row and column
+      // Dynamically creates the game for input elements
+      function TicTacToe(formName, gridSize) {
+ 
+        this.PLAYER = 'X';
+        this.COMPUTER = 'Y';
+        this.EMPTY = '';
+
+        this.formElem = document.getElementById(formName);
+        this.gridSize = gridSize;
+
+        this.maxMoves = gridSize * gridSize;
+        this.moves = 0;
+      
+        this.buttonId = function buttonId(row,col) {
+          return row + 'x' + col;
+        };
+
+        this.button = function(row,col) {
+          return document.getElementById(this.buttonId(row,col));
+        };
+
+        this.createButtons = function() {
+          for (var row=0; row<this.gridSize; row++) {
+            for (var col=0; col<this.gridSize; col++) {
+              var gridElem = document.createElement('button');
+              gridElem.setAttribute('id', this.buttonId(row,col));
+              gridElem.onclick = function () { return false; }
+              this.formElem.appendChild(gridElem);
+            }
+            this.formElem.appendChild(document.createElement('br'));
+          }
+        };
+        
+        this.grid = new Array();
+
+        this.initializeGrid = function () {
+          for (var row=0; row<this.gridSize; row++) {
+            this.grid[row] = [];
+            for (var col=0; col<this.gridSize; col++) {
+              this.grid[row][col] = undefined; 
+            }
+          }
+        }
+
+        this.rowIndexes = new Array();
+        this.colIndexes = new Array();
+        this.diagIndexes = new Array();
+        this.allIndexes = new Array();
+
+        this.buildIndexes = function() {
+ 
+          // Build row/col indexes
+          for (var i=0; i<this.gridSize; i++) {
+            this.rowIndexes[i] = new Array();
+            this.colIndexes[i] = new Array();
+            for (var j=0; j<this.gridSize; j++) {
+              this.rowIndexes[i].push([ i, j ]);
+              this.colindexes[i].push([ j, i ]);
+            }
+          }
+
+          // Build diag indexes
+          for (var i=0; i<this.gridSize; i++) {
+            this.diagIndex[0].push([ i, i ]);
+            this.diagIndex[1].push([ this.gridSize - i, i ]);
+          }
+
+          // Construct master of all indexes
+          for (var row in this.rowIndexes)
+            this.allIndexes.push(row);
+          for (var col in this.colIndexes)
+            this.allIndexes.push(col);
+          for (var diag in this.diagIndexes)
+            this.allIndexes.push(diag);
+        }
+
+        this.gridLabel = function(row,col) {
+          var item = this.grid[row][col];
+          if (typeof item == "undefined")
+            return this.EMPTY;
+          return item;
+        }
+
+        this.updateButtons = function() {
+          for (var row=0; row<this.gridSize; row++) {
+            for (var col=0; col<this.gridSize; col++) {
+              this.button(row,col).innerHTML = this.gridLabel(row,col);
+            }
+          }
+        };
+
+        this.playerMove = function(row, col) {
+          if (this.gameOver()) {
+            alert('Game is over, refresh to start a new game.');
+            return;
+          }
+        } 
+
+        this.gameOver = function() {
+          return this.moves >= this.maxMoves || this.someoneWon();
+        }
+
+        this.playerWon = function() {
+          return this.isWinner(this.PLAYER);
+        }
+        
+        this.computerWon = function() {
+          return this.isWinner(this.COMPUTER);
+        }
+
+        this.someoneWon = function() {
+          return this.playerWon() || this.computerWon();
+        }
+
+        this.isWinner = function(player) {
+        }
+
+        this.initialize = function() {
+          this.initializeGrid();
+          this.createButtons();
+          this.updateButtons();
+        };
+      }
+    </script> 
+
+    <style rel="text/css">
+      form#game button {
+        width: 100;
+        height: 100;
+        font-size: xx-large;
+      }
+    </style>
+
+  </head>
+  <body onload="new TicTacToe('game',3).initialize();">
+    <form id="game">
+    </form>
+  </body>
