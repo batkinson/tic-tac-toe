@@ -221,6 +221,13 @@ function TicTacToeForm(formName, gridSize) {
       }
    };
 
+   this.disableButtons = function (disabled) {
+      buttons = this.formElem.getElementsByTagName('button');
+      for (var i=0; i<buttons.length; i++) {
+         buttons[i].disabled = disabled;
+      }
+   };
+
    this.makeMove = function(row,col) {
       if (this.game.isGameComplete()) {
          alert('Game is already over, refresh to play again.')
@@ -228,12 +235,21 @@ function TicTacToeForm(formName, gridSize) {
       this.markAndUpdate(row,col,PLAYER);
       if (this.game.isGameComplete()) {
          this.alertWinner();
+         return;
       }
-      var nextMove = this.game.optimalMove(COMPUTER);
-      this.markAndUpdate(nextMove.row,nextMove.col,COMPUTER);
-      if (this.game.isGameComplete()) {
-         this.alertWinner();
-      }
+
+      this.disableButtons(true);
+
+      var thisForm = this;
+      window.setTimeout(function() {
+         var nextMove = thisForm.game.optimalMove(COMPUTER);
+         thisForm.markAndUpdate(nextMove.row,nextMove.col,COMPUTER);
+         if (thisForm.game.isGameComplete()) {
+            thisForm.alertWinner();
+            return;
+        }
+        thisForm.disableButtons(false);
+      }, 100);
    };
 
    this.createHandler = function(row,col) {
