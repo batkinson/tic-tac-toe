@@ -230,9 +230,11 @@ function TicTacToeForm(formName, gridSize) {
    };
 
    this.disableButtons = function (disabled) {
-      buttons = this.formElem.getElementsByTagName('button');
-      for (var i=0; i<buttons.length; i++) {
-         buttons[i].disabled = disabled;
+      for (var row=0; row<this.game.size; row++) {
+         for (var col=0; col<this.game.size; col++) {
+            var button = this.button(row,col);
+            button.disabled = disabled || !this.game.cellAvailable(row,col);
+         }
       }
    };
 
