@@ -55,6 +55,9 @@ function TicTacToe(size, oldgrid) {
       allLines.push(diagLine2);
    };
 
+
+   // O(size^2), can we improve on it?
+   // Yes, an immutable grid + speculative moves eliminates grid copying
    this.copyGrid = function(other) {
       // Need a deep copy for side-effect free modification
       this.grid = other.grid.slice();
@@ -116,6 +119,9 @@ function TicTacToe(size, oldgrid) {
          return this.scoreGrid(depth);
       }
 
+
+      // Play all available moves, selecting a highest scoring one
+      // Currently O(size^2), only consider available!
       for (var row=0; row<this.size; row++) {
          for (var col=0; col<this.size; col++) {
             if (this.cellAvailable(row,col)) {
@@ -137,20 +143,8 @@ function TicTacToe(size, oldgrid) {
       return bestMove;
    };
 
-   this.toString = function() {
-      var gridStr = "+-----+\n";
-      for (var row = 0; row<this.size; row++) {
-         var cols = this.grid[row];
-         for (var col = 0; col<this.size; col++) {
-            var colStr = typeof cols[col] === "undefined"? " " : cols[col].label;
-            gridStr += "|" + colStr;
-         }
-         gridStr += "|\n";
-      }
-      gridStr += "+-----+";
-      return gridStr; 
-   };
-
+   // Currently O((2*size) + 2)
+   // Can be constant time if player count for line is maintained
    this.getWinner = function() {
       linescan:
       for (var i=0; i<this.allLines.length; i++) {
@@ -180,7 +174,22 @@ function TicTacToe(size, oldgrid) {
       }
       return false;
    };
+
+   this.toString = function() {
+      var gridStr = "+-----+\n";
+      for (var row = 0; row<this.size; row++) {
+         var cols = this.grid[row];
+         for (var col = 0; col<this.size; col++) {
+            var colStr = typeof cols[col] === "undefined"? " " : cols[col].label;
+            gridStr += "|" + colStr;
+         }
+         gridStr += "|\n";
+      }
+      gridStr += "+-----+";
+      return gridStr; 
+   };
    
+
    if (typeof oldgrid === "undefined") {
       this.size = size;
       this.moveMax = size * size;
