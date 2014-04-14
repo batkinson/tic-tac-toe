@@ -93,6 +93,10 @@ function GameGrid(size, oldgrid) {
       return next;
    };
 
+   this.flipCoin = function() {
+      return Math.random() < 0.5;
+   };
+
    this.optimalMove = function(player,depth) {
 
       if (typeof depth === 'undefined') {
@@ -116,7 +120,8 @@ function GameGrid(size, oldgrid) {
                }
                if (typeof bestMove === "undefined" ||
                      (player === COMPUTER && followingMove.score > bestMove.score) ||
-                     (player === PLAYER && followingMove.score < bestMove.score)) {
+                     (player === PLAYER && followingMove.score < bestMove.score) ||
+                     (followingMove.score == bestMove.score && this.flipCoin())) {
                   bestMove = { score: followingMove.score, row: row, col: col };
                }
             }
