@@ -3,7 +3,10 @@
  * Constructor for a player object.
  */
 function Player(label,description) {
-  this.label = label;
+   this.label = label;
+   this.toString = function() {
+      return label;
+   }
 }
 
 
@@ -181,7 +184,7 @@ function TicTacToe(size, oldgrid) {
       for (var row = 0; row<this.size; row++) {
          var cols = this.grid[row];
          for (var col = 0; col<this.size; col++) {
-            var colStr = typeof cols[col] === "undefined"? " " : cols[col].label;
+            var colStr = typeof cols[col] === "undefined"? " " : cols[col];
             gridStr += "|" + colStr;
          }
          gridStr += "|\n";
