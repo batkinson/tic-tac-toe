@@ -1,13 +1,19 @@
 
+/**
+ * Constructor for a player object.
+ */
 function Player(label,description) {
   this.label = label;
 }
 
 
+// Player constants
 var PLAYER = new Player('X');
 var COMPUTER = new Player('O');
 
-
+/**
+ * Constructor for a game object. This contains all logic for tic-tac-toe.
+ */
 function GameGrid(size, oldgrid) {
 
    this.initialize = function() {
@@ -189,7 +195,9 @@ function GameGrid(size, oldgrid) {
    }
 }
 
-
+/**
+ * Constructor for form object. Turns the form into a tic-tac-toe UI.
+ */
 function TicTacToeForm(formName, gridSize) {
 
    this.game = new GameGrid(gridSize);
