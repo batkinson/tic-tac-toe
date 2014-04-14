@@ -14,7 +14,7 @@ var COMPUTER = new Player('O');
 /**
  * Constructor for a game object. This contains all logic for tic-tac-toe.
  */
-function GameGrid(size, oldgrid) {
+function TicTacToe(size, oldgrid) {
 
    this.initialize = function() {
       this.buildGrid();
@@ -94,7 +94,7 @@ function GameGrid(size, oldgrid) {
    };
 
    this.nextGrid = function(row,col,player) {
-      var next = new GameGrid(this.size,this);
+      var next = new TicTacToe(this.size,this);
       next.markCell(row,col,player);
       return next;
    };
@@ -200,7 +200,7 @@ function GameGrid(size, oldgrid) {
  */
 function TicTacToeForm(formName, gridSize) {
 
-   this.game = new GameGrid(gridSize);
+   this.game = new TicTacToe(gridSize);
 
    this.formElem = document.getElementById(formName);
 
