@@ -305,4 +305,6 @@ function TicTacToeForm(formName, gridSize) {
       this.createButtons();
       this.updateButtons();
    };
+
+   this.initialize();
 }
