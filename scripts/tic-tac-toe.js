@@ -1,24 +1,18 @@
 
-function Player(label) {
+function Player(label,description) {
   this.label = label;
 }
+
 
 var PLAYER = new Player('X');
 var COMPUTER = new Player('O');
 
+
 function GameGrid(size, oldgrid) {
 
-   this.initGrid = function() {
+   this.initialize = function() {
       this.buildGrid();
       this.buildIndexes();
-   };
-
-   this.copyGrid = function(other) {
-      // To allow side-effect free modifications, need a deep copy
-      this.grid = other.grid.slice();
-      for (var row=0; row<this.size; row++) {
-        this.grid[row] = other.grid[row].slice();
-      }
    };
 
    this.buildGrid = function () {
@@ -32,46 +26,48 @@ function GameGrid(size, oldgrid) {
    };
 
    this.buildIndexes = function() {
-
-      this.rowIndexes = new Array();
-      this.colIndexes = new Array();
-      this.diagIndexes = new Array();
-      this.allIndexes = new Array();
-
-      // Build row/col indexes
+      var allLines = this.allLines = new Array();
+      // Build row/col lines
       for (var i=0; i<this.size; i++) {
-         this.rowIndexes[i] = new Array();
-         this.colIndexes[i] = new Array();
+         var rowLine = new Array();
+         var colLine = new Array();
          for (var j=0; j<this.size; j++) {
-            this.rowIndexes[i].push([i,j]);
-            this.colIndexes[i].push([j,i]);
+            rowLine.push([i,j]);
+            colLine.push([j,i]);
          }
+         allLines.push(rowLine);
+         allLines.push(colLine);
       }
-
-      // Build diag indexes, always only two of grid size
-      this.diagIndexes.push(new Array());
-      this.diagIndexes.push(new Array());
+      // Build diag lines
+      var diagLine1 = new Array();
+      var diagLine2 = new Array();
       for (var i=0; i<this.size; i++) {
-         this.diagIndexes[0].push([i,i]);
-         this.diagIndexes[1].push([this.size-(i+1),i]);
+         diagLine1.push([i,i]);
+         diagLine2.push([this.size-(i+1),i]);
       }
-
-      // Construct master of all indexes
-      for (var row in this.rowIndexes)
-         this.allIndexes.push(this.rowIndexes[row]);
-      for (var col in this.colIndexes)
-         this.allIndexes.push(this.colIndexes[col]);
-      for (var diag in this.diagIndexes)
-         this.allIndexes.push(this.diagIndexes[diag]);
+      allLines.push(diagLine1);
+      allLines.push(diagLine2);
    };
 
-   this.getMark = function(row, col) {
+   this.copyGrid = function(other) {
+      // Need a deep copy for side-effect free modification
+      this.grid = other.grid.slice();
+      for (var row=0; row<this.size; row++) {
+        this.grid[row] = other.grid[row].slice();
+      }
+   };
+
+   this.cellMark = function(row, col) {
       return this.grid[row][col];
    };
+   
+   this.cellAvailable = function(row, col) {
+      return typeof this.grid[row][col] === "undefined";
+   };
 
-   this.setMark = function(row, col, player) {
+   this.markCell = function(row, col, player) {
       var playerDefined = typeof player !== "undefined";
-      var alreadyMarked = typeof this.getMark(row,col) !== "undefined";
+      var alreadyMarked = !this.cellAvailable(row,col);
       if (alreadyMarked && playerDefined) {
          throw "cell already marked";
       }
@@ -84,19 +80,83 @@ function GameGrid(size, oldgrid) {
       }
    };
 
-   this.getWinner = function() {
-      var playerWins = function (cell) { return this.getMark(cell[0],cell[1]) === PLAYER; };
-      var computerWins = function (cell) { return this.getMark(cell[0],cell[1]) === COMPUTER; };
-      for (lineIdx in this.allIndexes) {
-         var line = this.allIndexes[lineIdx];
-         if (line.every(playerWins,this)) {
-            return PLAYER;
-         }
-         if (line.every(computerWins,this)) {
-            return COMPUTER;
+   this.scoreGrid = function(depth) {
+      var winner = this.getWinner();
+      if (typeof winner === 'undefined') return 0;
+      if (winner === PLAYER) return depth-10; // non-positive 
+      if (winner === COMPUTER) return 10-depth; // non-negative
+   };
+
+   this.nextGrid = function(row,col,player) {
+      var next = new GameGrid(this.size,this);
+      next.markCell(row,col,player);
+      return next;
+   };
+
+   this.optimalMove = function(player,depth) {
+
+      if (typeof depth === 'undefined') {
+         depth = 0;
+      }
+
+      var bestMove = undefined;
+      var opponent = (player === PLAYER? COMPUTER : PLAYER);
+
+      if (this.isGameComplete()) {
+         return this.scoreGrid(depth);
+      }
+
+      for (var row=0; row<this.size; row++) {
+         for (var col=0; col<this.size; col++) {
+            if (this.cellAvailable(row,col)) {
+               var nextGrid = this.nextGrid(row,col,player);
+               var followingMove = nextGrid.optimalMove(opponent,depth+1);
+               if (typeof followingMove === 'number') {
+                  followingMove = { score: followingMove, row: row, col: col }; 
+               }
+               if (typeof bestMove === "undefined" ||
+                     (player === COMPUTER && followingMove.score > bestMove.score) ||
+                     (player === PLAYER && followingMove.score < bestMove.score)) {
+                  bestMove = { score: followingMove.score, row: row, col: col };
+               }
+            }
          }
       }
-      return undefined;
+
+      return bestMove;
+   };
+
+   this.toString = function() {
+      var gridStr = "+-----+\n";
+      for (var row = 0; row<this.size; row++) {
+         var cols = this.grid[row];
+         for (var col = 0; col<this.size; col++) {
+            var colStr = typeof cols[col] === "undefined"? " " : cols[col].label;
+            gridStr += "|" + colStr;
+         }
+         gridStr += "|\n";
+      }
+      gridStr += "+-----+";
+      return gridStr; 
+   };
+
+   this.getWinner = function() {
+      linescan:
+      for (var i=0; i<this.allLines.length; i++) {
+         var line = this.allLines[i];
+         var winner = this.cellMark(line[0][0],line[0][1]);
+         if (typeof winner === "undefined") {
+            continue linescan;
+         }
+         for (var j=1; j<this.size; j++) {
+            var next = this.cellMark(line[j][0],line[j][1]);
+            if (typeof next === "undefined" || next !== winner) {
+               continue linescan;
+            }
+         }
+         return winner;
+      }
+      return;
    };
 
    this.isGameComplete = function() {
@@ -114,20 +174,20 @@ function GameGrid(size, oldgrid) {
       this.size = size;
       this.moveMax = size * size;
       this.moves = 0;
-      this.initGrid();
+      this.initialize();
    } else {
       this.size = oldgrid.size;
       this.moveMax = oldgrid.moveMax;
       this.moves = oldgrid.moves;
-      this.grid = this.copyGrid(oldgrid.grid);
+      this.copyGrid(oldgrid);
+      this.allLines = oldgrid.allLines;
    }
 }
 
-// Constructs the id of the input element for the specified row and column
-// Dynamically creates the game for input elements
-function TicTacToe(formName, gridSize) {
 
-   this.grid = new GameGrid(gridSize);
+function TicTacToeForm(formName, gridSize) {
+
+   this.game = new GameGrid(gridSize);
 
    this.formElem = document.getElementById(formName);
 
@@ -139,12 +199,50 @@ function TicTacToe(formName, gridSize) {
       return document.getElementById(this.buttonId(row,col));
    };
 
+   this.markAndUpdate = function(row,col,player) {
+      this.game.markCell(row,col,player);
+      this.updateButtons();
+   };
+
+   this.alertWinner = function() {
+      if (this.game.getWinner() === PLAYER) {
+         alert('You win!');
+      }
+      if (this.game.getWinner() === COMPUTER) {
+         alert('Computer wins!');
+      }
+      else {
+         alert("It's a Draw!");
+      }
+   };
+
+   this.makeMove = function(row,col) {
+      if (this.game.isGameComplete()) {
+         alert('Game is already over, refresh to play again.')
+      }
+      this.markAndUpdate(row,col,PLAYER);
+      if (this.game.isGameComplete()) {
+         this.alertWinner();
+      }
+      var nextMove = this.game.optimalMove(COMPUTER);
+      this.markAndUpdate(nextMove.row,nextMove.col,COMPUTER);
+      if (this.game.isGameComplete()) {
+         this.alertWinner();
+      }
+   };
+
+   this.createHandler = function(row,col) {
+      var gameForm = this;
+      return function() { gameForm.makeMove(row,col); return false; }
+   };
+
    this.createButtons = function() {
-      for (var row=0; row<this.grid.size; row++) {
-         for (var col=0; col<this.grid.size; col++) {
+      var size = this.game.size;
+      for (var row=0; row<size; row++) {
+         for (var col=0; col<size; col++) {
             var gridElem = document.createElement('button');
             gridElem.setAttribute('id', this.buttonId(row,col));
-            gridElem.onclick = function () { return false; }
+            gridElem.onclick = this.createHandler(row,col);
             this.formElem.appendChild(gridElem);
          }
          this.formElem.appendChild(document.createElement('br'));
@@ -152,15 +250,16 @@ function TicTacToe(formName, gridSize) {
    };
 
    this.gridLabel = function(row,col) {
-      var player = this.grid.getMark(row,col);
+      var player = this.game.cellMark(row,col);
       if (typeof player === "object")
          return player.label;
       return ' ';
    };
 
    this.updateButtons = function() {
-      for (var row=0; row<this.grid.size; row++) {
-         for (var col=0; col<this.grid.size; col++) {
+      var size = this.game.size;
+      for (var row=0; row<size; row++) {
+         for (var col=0; col<size; col++) {
             var gridLabel = this.gridLabel(row,col);
             var button = this.button(row,col);
             button.innerHTML = gridLabel;
@@ -173,12 +272,6 @@ function TicTacToe(formName, gridSize) {
 
    this.initialize = function() {
       this.createButtons();
-      this.grid.setMark(0,0,PLAYER);
-      this.grid.setMark(0,1,PLAYER);
-      this.grid.setMark(0,2,PLAYER);
       this.updateButtons();
-      var gameover = this.grid.isGameComplete();
-      var winner = this.grid.getWinner();
-      alert('game over? ' + gameover + ' ' + (typeof winner !== 'undefined'? winner.label + ' wins!' : ''));
    };
 }
