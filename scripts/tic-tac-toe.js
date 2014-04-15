@@ -146,21 +146,21 @@ TicTacToe.prototype = {
 
                var followingMove = this.speculate(row,col,player).optimalMove(opponent,depth+1,alpha,beta);
 
-               if (typeof followingMove === 'number') {
-                  // Convert raw score to move
-                  followingMove = { score: followingMove, row: row, col: col }; 
-               }
+               if (typeof followingMove === 'number')
+                  move = { score: followingMove, row: row, col: col };
+               else
+                  move = { score: followingMove.score, row: row, col: col };
 
                var alphaExists = typeof alpha !== "undefined";
                var betaExists = typeof beta !== "undefined";
 
-               if (maximizing) {
-                  alpha = !alphaExists || followingMove.score > alpha.score? { score: followingMove.score, row: row, col: col } : alpha;
+               if (maximizing && (!alphaExists || move.score > alpha.score)) {
+                  alpha = move;
                   if (betaExists && beta.score <= alpha.score)
                      break movescan;
                }
-               else {
-                  beta = !betaExists || followingMove.score < beta.score? { score: followingMove.score, row: row, col: col } : beta;
+               else if (minimizing && (!betaExists || move.score < beta.score)) {
+                  beta = move;
                   if (alphaExists && beta.score <= alpha.score)
                      break movescan;
                }
