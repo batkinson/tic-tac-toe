@@ -197,25 +197,31 @@ function TicTacToeForm(formName, gridSize) {
    if (typeof gridSize === "undefined") {
       gridSize = 3;
    }
+   
 
    this.game = new TicTacToe(gridSize);
-
    this.formElem = document.getElementById(formName);
+   
+   this.game.buildGame();
+   this.createButtons();
+}
 
-   this.buttonId = function buttonId(row,col) {
+TicTacToeForm.prototype = {
+
+   buttonId: function buttonId(row,col) {
       return row + 'x' + col;
-   };
+   },
 
-   this.button = function(row,col) {
+   button: function(row,col) {
       return document.getElementById(this.buttonId(row,col));
-   };
+   },
 
-   this.markAndUpdate = function(row,col,player) {
+   markAndUpdate: function(row,col,player) {
       this.game.setCell(row,col,player);
       this.updateButtons();
-   };
+   },
 
-   this.alertWinner = function() {
+   alertWinner: function() {
       if (this.game.getWinner() === PLAYER) {
          alert('You win!');
       }
@@ -225,18 +231,19 @@ function TicTacToeForm(formName, gridSize) {
       else {
          alert("It's a Draw!");
       }
-   };
+   },
 
-   this.disableButtons = function (disabled) {
+   disableButtons: function (disabled) {
       for (var row=0; row<this.game.size; row++) {
          for (var col=0; col<this.game.size; col++) {
             var button = this.button(row,col);
             button.disabled = disabled || !this.game.cellAvailable(row,col);
          }
       }
-   };
+   },
 
-   this.makeMove = function(row,col) {
+   makeMove: function(row,col) {
+
       if (this.game.isGameComplete()) {
          alert('Game is already over, refresh to play again.')
       }
@@ -258,14 +265,14 @@ function TicTacToeForm(formName, gridSize) {
         }
         thisForm.disableButtons(false);
       }, 100);
-   };
+   },
 
-   this.createHandler = function(row,col) {
+   createHandler: function(row,col) {
       var gameForm = this;
       return function() { gameForm.makeMove(row,col); return false; }
-   };
+   },
 
-   this.createButtons = function() {
+   createButtons: function() {
       var size = this.game.size;
       for (var row=0; row<size; row++) {
          for (var col=0; col<size; col++) {
@@ -276,16 +283,16 @@ function TicTacToeForm(formName, gridSize) {
          }
          this.formElem.appendChild(document.createElement('br'));
       }
-   };
+   },
 
-   this.gridLabel = function(row,col) {
+   gridLabel: function(row,col) {
       var player = this.game.getCell(row,col);
       if (typeof player === "object")
          return player.label;
       return ' ';
-   };
+   },
 
-   this.updateButtons = function() {
+   updateButtons: function() {
       var size = this.game.size;
       for (var row=0; row<size; row++) {
          for (var col=0; col<size; col++) {
@@ -297,8 +304,5 @@ function TicTacToeForm(formName, gridSize) {
             }
          }
       }
-   };
-
-   this.game.buildGame();
-   this.createButtons();
-}
+   }
+};
