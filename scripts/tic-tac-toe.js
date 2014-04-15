@@ -2,12 +2,14 @@
 /**
  * Constructor for a player object.
  */
-function Player(label,description) {
+function Player(label) {
    this.label = label;
-   this.toString = function() {
-      return label;
-   }
 }
+Player.prototype = {
+   toString: function() {
+      return this.label;
+   }
+};
 
 
 // Player constants
@@ -16,101 +18,205 @@ var COMPUTER = new Player('O');
 
 
 /**
+ * Represents a cell in the tic-tac-toe grid.
+ */
+function Cell() {
+   this.lines = new Array();
+}
+Cell.prototype = {
+
+   addLine: function(line) {
+      this.lines.push(line);
+   },
+
+   isMarked: function() {
+      return typeof this.mark !== "undefined";
+   },
+
+   getMark: function() {
+      return this.mark;
+   },
+
+   setMark: function(player) {
+      if (this.isMarked()) throw "cell already marked";
+      this.mark = player;
+      for (var linei=0; linei<this.lines.length; linei++) {
+         this.lines[linei].markForPlayer(player);
+      }
+   },
+
+   cloneForSpeculation: function(newGrid) {
+      var specCell = new Cell();
+      for (var l=0; l<this.lines.length; l++) {
+         var origLine = this.lines[l];
+         var specLine = new Line(newGrid,origLine);
+         for (var c=0; c<origLine.cells.length; c++) {
+            var origCell = origLine.cells[c];
+            if (origCell === this) {
+               specLine.cells[c] = specCell;
+               specCell.addLine(specLine);
+            }
+         }
+      }
+      return specCell;
+   },
+
+   toString: function() {
+      return this.isMarked()? this.mark.toString() : " ";
+   }
+
+};
+
+
+/**
+ * Represents a possible winning line in the grid, contains cells.
+ */
+function Line(grid,line) {
+   this.grid = grid;
+   if (typeof line !== "undefined") {
+      this[PLAYER] = line[PLAYER];
+      this[COMPUTER] = line[COMPUTER];
+      this.cells = line.cells.slice();
+   }
+   else {
+      this.cells = new Array();
+   }
+}
+Line.prototype = {
+
+   addCell: function(cell) {
+      if (this.cells.length >= this.grid.size) throw "line already full";
+      this.cells.push(cell);
+      cell.addLine(this);
+   },
+
+   markForPlayer: function(player) {
+      if (typeof this[player] === "undefined") {
+         this[player] = 1;
+         return;
+      }  
+      if (this[player] >= this.cells.size) throw "tried to mark too many cells";
+      this[player]++;
+      if (this[player] == this.grid.size) {
+         this.grid.setWinner(player);
+      }
+   }
+};
+
+
+/**
  * Constructor for a game object. This contains all logic for tic-tac-toe.
  */
-function TicTacToe(size, oldgrid) {
+function TicTacToe(size, lastState) {
+   this.size = size;
+   if (typeof lastState !== "undefined") {
+      this.lastState = lastState;
+      this.grid = lastState.grid;
+      this.moves = lastState.moves;
+      this.moveMax = lastState.moveMax;
+   }
+}
+TicTacToe.prototype = {
 
-   this.initialize = function() {
-      this.buildGrid();
-      this.buildLines();
-   };
+   buildGame: function() {
 
-   this.buildGrid = function () {
-      this.grid = new Array();
-      for (var row=0; row<this.size; row++) {
-         this.grid[row] = [];
-         for (var col=0; col<this.size; col++) {
-            this.grid[row][col] = undefined; 
-         }
-      }
-   };
+      this.grid = new Array(this.size);
+      this.moves = 0;
+      this.moveMax = this.size * this.size;
 
-   this.buildLines = function() {
-      var allLines = this.allLines = new Array();
-      // Build row/col lines
+      // Construct cell grid
       for (var i=0; i<this.size; i++) {
-         var rowLine = new Array();
-         var colLine = new Array();
+         this.grid[i] = new Array(this.size);
          for (var j=0; j<this.size; j++) {
-            rowLine.push([i,j]);
-            colLine.push([j,i]);
+            this.grid[i][j] = new Cell();
          }
-         allLines.push(rowLine);
-         allLines.push(colLine);
       }
-      // Build diag lines
-      var diagLine1 = new Array();
-      var diagLine2 = new Array();
+
+      // Build rows/cols
       for (var i=0; i<this.size; i++) {
-         diagLine1.push([i,i]);
-         diagLine2.push([this.size-(i+1),i]);
+         var row = new Line(this);
+         var col = new Line(this);
+         for (var j=0; j<this.size; j++) {
+            row.addCell(this.grid[i][j]);
+            col.addCell(this.grid[j][i]);
+         }
       }
-      allLines.push(diagLine1);
-      allLines.push(diagLine2);
-   };
-
-
-   // O(size^2), can we improve on it?
-   // Yes, an immutable grid + speculative moves eliminates grid copying
-   this.copyGrid = function(other) {
-      // Need a deep copy for side-effect free modification
-      this.grid = other.grid.slice();
-      for (var row=0; row<this.size; row++) {
-        this.grid[row] = other.grid[row].slice();
+      
+      // Build diagonal lines
+      var diag1 = new Line(this);
+      var diag2 = new Line(this);
+      for (var i=0; i<this.size; i++) {
+         diag1.addCell(this.grid[i][i]);
+         diag2.addCell(this.grid[this.size-(i+1)][i]);
       }
-   };
-
-   this.cellMark = function(row, col) {
-      return this.grid[row][col];
-   };
+   },
    
-   this.cellAvailable = function(row, col) {
-      return typeof this.grid[row][col] === "undefined";
-   };
+   getCell: function(row,col) {
+      if (typeof this.speculatedMove !== "undefined") {
+         if (this.speculatedMove.row == row && this.speculatedMove.col == col) {
+            return this.speculatedMove.cell;
+         }
+         else if (typeof this.lastState !== "undefined") {
+            return this.lastState.getCell(row,col);
+         }
+      }
+      return this.grid[row][col];
+   },
 
-   this.markCell = function(row, col, player) {
-      var playerDefined = typeof player !== "undefined";
-      var alreadyMarked = !this.cellAvailable(row,col);
-      if (alreadyMarked && playerDefined) {
-         throw "cell already marked";
-      }
-      this.grid[row][col] = player;
-      if (playerDefined) {
-         this.moves++;
-      }
-      else if (alreadyMarked) {
-         this.moves--;
-      }
-   };
+   cellAvailable: function(row,col) {
+      return !this.getCell(row,col).isMarked();
+   },
 
-   this.scoreGrid = function(depth) {
+   cellMark: function(row,col) {
+      return this.getCell(row,col).getMark();
+   },
+
+   markCell: function(row,col,player) {
+      this.getCell(row,col).setMark(player);
+      this.moves++;
+   },
+
+   setWinner: function(player) {
+      if (typeof this.player !== "undefined") throw "winner already determined";
+      this.winner = player;
+   },
+   
+   getWinner: function() {
+      return this.winner;
+   },
+
+   isGameComplete: function() {
+      if (this.moves >= this.moveMax) {
+         return true;
+      }
       var winner = this.getWinner();
-      if (typeof winner === 'undefined') return 0;
+      if (typeof winner !== "undefined") {
+         return true;
+      }
+      return false;
+   },
+   
+   scoreGrid: function(depth) {
+      var winner = this.getWinner();
+      if (typeof winner === "undefined") return 0;
       if (winner === PLAYER) return depth-10; // non-positive 
       if (winner === COMPUTER) return 10-depth; // non-negative
-   };
+   },
 
-   this.nextGrid = function(row,col,player) {
-      var next = new TicTacToe(this.size,this);
-      next.markCell(row,col,player);
-      return next;
-   };
+   speculate: function(row,col,player) {
+      if (this.getCell(row,col).isMarked()) throw "tried to speculate unavailable move";
+      var specState = new TicTacToe(this.size, this);
+      var specCell = this.getCell(row,col).cloneForSpeculation(specState);
+      specState.speculatedMove = { cell: specCell, row: row, col: col };
+      specState.markCell(row,col,player);
+      return specState;
+   },
 
-   this.flipCoin = function() {
+   flipCoin: function() {
       return Math.random() < 0.5;
-   };
+   },
 
-   this.optimalMove = function(player,depth) {
+   optimalMove: function(player,depth) {
 
       if (typeof depth === 'undefined') {
          depth = 0;
@@ -123,14 +229,12 @@ function TicTacToe(size, oldgrid) {
          return this.scoreGrid(depth);
       }
 
-
       // Play all available moves, selecting a highest scoring one
       // Currently O(size^2), only consider available!
       for (var row=0; row<this.size; row++) {
          for (var col=0; col<this.size; col++) {
             if (this.cellAvailable(row,col)) {
-               var nextGrid = this.nextGrid(row,col,player);
-               var followingMove = nextGrid.optimalMove(opponent,depth+1);
+               var followingMove = this.speculate(row,col,player).optimalMove(opponent,depth+1);
                if (typeof followingMove === 'number') {
                   followingMove = { score: followingMove, row: row, col: col }; 
                }
@@ -145,68 +249,21 @@ function TicTacToe(size, oldgrid) {
       }
 
       return bestMove;
-   };
+   },
 
-   // Currently O((2*size) + 2)
-   // Can be constant time if player count for line is maintained
-   this.getWinner = function() {
-      linescan:
-      for (var i=0; i<this.allLines.length; i++) {
-         var line = this.allLines[i];
-         var winner = this.cellMark(line[0][0],line[0][1]);
-         if (typeof winner === "undefined") {
-            continue linescan;
-         }
-         for (var j=1; j<this.size; j++) {
-            var next = this.cellMark(line[j][0],line[j][1]);
-            if (typeof next === "undefined" || next !== winner) {
-               continue linescan;
-            }
-         }
-         return winner;
-      }
-      return;
-   };
-
-   this.isGameComplete = function() {
-      if (this.moves >= this.moveMax) {
-         return true;
-      }
-      var winner = this.getWinner();
-      if (typeof winner !== "undefined") {
-         return true;
-      }
-      return false;
-   };
-
-   this.toString = function() {
+   toString: function() {
       var gridStr = "+-----+\n";
       for (var row = 0; row<this.size; row++) {
-         var cols = this.grid[row];
          for (var col = 0; col<this.size; col++) {
-            var colStr = typeof cols[col] === "undefined"? " " : cols[col];
-            gridStr += "|" + colStr;
+            gridStr += "|" + this.getCell(row,col);
          }
          gridStr += "|\n";
       }
       gridStr += "+-----+";
       return gridStr; 
-   };
-   
-
-   if (typeof oldgrid === "undefined") {
-      this.size = size;
-      this.moveMax = size * size;
-      this.moves = 0;
-      this.initialize();
-   } else {
-      this.size = oldgrid.size;
-      this.moveMax = oldgrid.moveMax;
-      this.moves = oldgrid.moves;
-      this.copyGrid(oldgrid);
-      this.allLines = oldgrid.allLines;
    }
-}
+};
+
 
 /**
  * Constructor for form object. Turns the form into a tic-tac-toe UI.
@@ -314,10 +371,6 @@ function TicTacToeForm(formName, gridSize) {
       }
    };
 
-   this.initialize = function() {
-      this.createButtons();
-      this.updateButtons();
-   };
-
-   this.initialize();
+   this.game.buildGame();
+   this.createButtons();
 }
