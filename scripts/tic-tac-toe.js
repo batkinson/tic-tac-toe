@@ -176,14 +176,12 @@ TicTacToe.prototype = {
    },
 
    toString: function() {
-      var gridStr = "+-----+\n";
       for (var row = 0; row<this.size; row++) {
          for (var col = 0; col<this.size; col++) {
-            gridStr += "|" + (this.cellAvailable(row,col)? " " : this.getCell(row,col));
+            gridStr += (this.cellAvailable(row,col)? " " : this.getCell(row,col));
          }
-         gridStr += "|\n";
+         gridStr += "\n";
       }
-      gridStr += "+-----+";
       return gridStr; 
    }
 };

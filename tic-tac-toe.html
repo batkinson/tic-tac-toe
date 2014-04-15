@@ -18,17 +18,17 @@
             display: table-row;
             line-height: 175%;
          }
-         button:focus {
-            outline: none;
-         }
          game {
             display: table;
             width: 100%;
          }
-         form#game {
+         .tictactoe {
             display: table-cell;
          }
-         form#game button {
+         .tictactoe button:focus {
+            outline: none;
+         }
+         .tictactoe button {
             width: 100px;
             height: 100px;
             font-size: 72px;
@@ -37,16 +37,16 @@
             border: none;
             color: black;
          }
-         form#game > button:nth-of-type(3n+1) {
+         .tictactoe > button:nth-of-type(3n+1) {
             border-right: 5px solid black;
          }
-         form#game > button:nth-of-type(3n+3) {
+         .tictactoe > button:nth-of-type(3n+3) {
             border-left: 5px solid black;
          }
-         form#game > button:nth-of-type(-n+3) {
+         .tictactoe > button:nth-of-type(-n+3) {
             border-bottom: 5px solid black;
          }
-         form#game > button:nth-last-of-type(-n+3) {
+         .tictactoe > button:nth-last-of-type(-n+3) {
             border-top: 5px solid black;
          }
          heading, game#form, game {
@@ -58,7 +58,7 @@
    <body onload="gameForm = new TicTacToeForm('game');">
       <game>
          <heading>Tic Tac Toe</heading>
-         <form id="game" />
+         <form id="game" class="tictactoe" />
       </game>
    </body>
 </html>
