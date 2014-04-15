@@ -123,43 +123,56 @@ TicTacToe.prototype = {
       return specState;
    },
 
-   flipCoin: function() {
-      return Math.random() < 0.5;
-   },
-
-   optimalMove: function(player,depth) {
+   optimalMove: function(player,depth,alpha,beta) {
 
       if (typeof depth === "undefined") {
          depth = 0;
       }
 
-      var bestMove = undefined;
-      var opponent = (player === PLAYER? COMPUTER : PLAYER);
+      var maximizing = player === COMPUTER;
+      var minimizing = !maximizing;
+
+      var opponent = player === PLAYER? COMPUTER : PLAYER;
 
       if (this.isGameComplete()) {
          return this.scoreGrid(depth);
       }
 
-      // Play all available moves, selecting a highest scoring one
-      // Currently O(size^2), only consider available!
+      movescan:
       for (var row=0; row<this.size; row++) {
          for (var col=0; col<this.size; col++) {
+
             if (this.cellAvailable(row,col)) {
-               var followingMove = this.speculate(row,col,player).optimalMove(opponent,depth+1);
+
+               var followingMove = this.speculate(row,col,player).optimalMove(opponent,depth+1,alpha,beta);
+
                if (typeof followingMove === 'number') {
+                  // Convert raw score to move
                   followingMove = { score: followingMove, row: row, col: col }; 
                }
-               if (typeof bestMove === "undefined" ||
-                     (player === COMPUTER && followingMove.score > bestMove.score) ||
-                     (player === PLAYER && followingMove.score < bestMove.score) ||
-                     (followingMove.score == bestMove.score && this.flipCoin())) {
-                  bestMove = { score: followingMove.score, row: row, col: col };
+
+               var alphaExists = typeof alpha !== "undefined";
+               var betaExists = typeof beta !== "undefined";
+
+               if (maximizing) {
+                  alpha = !alphaExists || followingMove.score > alpha.score? { score: followingMove.score, row: row, col: col } : alpha;
+                  if (betaExists && beta.score <= alpha.score)
+                     break movescan;
+               }
+               else {
+                  beta = !betaExists || followingMove.score < beta.score? { score: followingMove.score, row: row, col: col } : beta;
+                  if (alphaExists && beta.score <= alpha.score)
+                     break movescan;
                }
             }
+
          }
       }
 
-      return bestMove;
+      if (maximizing) 
+         return alpha;
+      else
+         return beta;
    },
 
    toString: function() {
