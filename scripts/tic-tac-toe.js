@@ -264,7 +264,7 @@ TicTacToeForm.prototype = {
             return;
         }
         thisForm.disableButtons(false);
-      }, 100);
+      }, 10);
    },
 
    createHandler: function(row,col) {
