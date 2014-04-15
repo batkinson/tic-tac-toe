@@ -194,6 +194,10 @@ TicTacToe.prototype = {
  */
 function TicTacToeForm(formName, gridSize) {
 
+   if (typeof gridSize === "undefined") {
+      gridSize = 3;
+   }
+
    this.game = new TicTacToe(gridSize);
 
    this.formElem = document.getElementById(formName);
