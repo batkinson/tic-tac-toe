@@ -1,0 +1,6 @@
+@font-face {
+  font-family: 'Rokkitt';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Rokkitt'), url(./Rokkitt-Regular.ttf) format('truetype');
+}
