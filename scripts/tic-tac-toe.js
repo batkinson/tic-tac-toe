@@ -336,6 +336,7 @@ TicTacToeForm.prototype = {
       gameElem.appendChild(formElem);
 
       var resultElem = this.resultElem = document.createElement('result');
+      resultElem.onclick = function() { location.reload(); };
       gameElem.appendChild(resultElem);
 
       gameElem.className += " tictactoe";
