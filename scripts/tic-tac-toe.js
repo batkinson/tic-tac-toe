@@ -190,18 +190,20 @@ TicTacToe.prototype = {
 /**
  * Constructor for form object. Turns the form into a tic-tac-toe UI.
  */
-function TicTacToeForm(formName, gridSize) {
+function TicTacToeForm(elemId, gridSize) {
 
    if (typeof gridSize === "undefined") {
       gridSize = 3;
    }
-   
 
    this.game = new TicTacToe(gridSize);
-   this.formElem = document.getElementById(formName);
+   this.elemId = elemId;
+   this.elem = document.getElementById(elemId);
+   this.heading = "Tic Tac Toe";
+   this.size = gridSize;
    
    this.game.buildGame();
-   this.createButtons();
+   this.createUI();
 }
 
 TicTacToeForm.prototype = {
@@ -216,7 +218,7 @@ TicTacToeForm.prototype = {
 
    markAndUpdate: function(row,col,player) {
       this.game.setCell(row,col,player);
-      this.updateButtons();
+      this.updateUI();
    },
 
    alertWinner: function() {
@@ -270,17 +272,58 @@ TicTacToeForm.prototype = {
       return function() { gameForm.makeMove(row,col); return false; }
    },
 
-   createButtons: function() {
-      var size = this.game.size;
+   createUI: function() {
+
+      var newStyle = document.createElement('style');
+      document.getElementsByTagName('head')[0].appendChild(newStyle);
+
+      var sheet = document.styleSheets[document.styleSheets.length - 1];
+
+      var size = this.size;
+
+      var rules = {
+         ".tictactoe": "{ font-family: 'Rokkitt', serif; font-size: 200%; color: black; }",
+         ".tictactoe > *": "{ text-align: center; vertical-align: middle; }",
+         ".tictactoe ": "{ display: table; width: 100%; }",
+         ".tictactoe heading": "{ display: table-row; line-height: 300%; }",
+         ".tictactoe form": "{ display: table-cell; }",
+         ".tictactoe button:focus": "{ outline: none; }",
+         ".tictactoe button": "{ width: 100px; height: 100px; font-size: 72px; vertical-align: top; background: none; border: none; color: black; }",
+      };
+
+      rules[".tictactoe form > button:nth-of-type(" + size + "n+1)"] = "{ border-right: 5px solid black; }";
+      rules[".tictactoe form > button:nth-of-type(" + size + "n+"+ size +")"] = "{ border-left: 5px solid black; }";
+      rules[".tictactoe form > button:nth-of-type(-n+" + size + ")"] = "{ border-bottom: 5px solid black; }";
+      rules[".tictactoe form > button:nth-last-of-type(-n+" + size + ")"] = "{ border-top: 5px solid black; }";
+
+      for (selector in rules) {
+         if (sheet.insertRule)
+            sheet.insertRule(selector + rules[selector], sheet.cssRules.length);
+         else
+            sheet.addRule(selector, rules[selector]);
+      }
+
+      var gameElem = this.elem;
+
+      var headingElem = document.createElement('heading');
+      headingElem.appendChild(document.createTextNode(this.heading));
+
+      var formElem = document.createElement('form');
+
+      gameElem.appendChild(headingElem);
+      gameElem.className += " tictactoe";
+
       for (var row=0; row<size; row++) {
          for (var col=0; col<size; col++) {
-            var gridElem = document.createElement('button');
-            gridElem.setAttribute('id', this.buttonId(row,col));
-            gridElem.onclick = this.createHandler(row,col);
-            this.formElem.appendChild(gridElem);
+            var buttonElem = document.createElement('button');
+            buttonElem.setAttribute('id', this.buttonId(row,col));
+            buttonElem.onclick = this.createHandler(row,col);
+            formElem.appendChild(buttonElem);
          }
-         this.formElem.appendChild(document.createElement('br'));
+         formElem.appendChild(document.createElement('br'));
       }
+      gameElem.appendChild(formElem);
+      this.elem.appendChild(gameElem);
    },
 
    gridLabel: function(row,col) {
@@ -290,7 +333,7 @@ TicTacToeForm.prototype = {
       return ' ';
    },
 
-   updateButtons: function() {
+   updateUI: function() {
       var size = this.game.size;
       for (var row=0; row<size; row++) {
          for (var col=0; col<size; col++) {
