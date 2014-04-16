@@ -211,6 +211,9 @@ function TicTacToeForm(elemId, gridSize) {
    this.heading = "Tic Tac Toe";
    this.size = gridSize;
    this.playerFirst = true;
+   this.resultDelay = 1000;
+   this.firstMoveDelay = 1000;
+   this.computerMoveDelay = 10;
 
    this.createUI();
    this.startGame(true);
@@ -239,7 +242,7 @@ TicTacToeForm.prototype = {
             thisForm.resultElem.innerHTML = text;
             thisForm.formElem.style.display = "none";
             thisForm.resultElem.style.display = "table-cell";
-         },500);
+         },thisForm.resultDelay);
       };
 
       if (this.game.getWinner() === PLAYER)
@@ -280,7 +283,7 @@ TicTacToeForm.prototype = {
          window.setTimeout(function() {
             thisForm.computerFirstMove();
             thisForm.disableUI(false);
-         },500);
+         },thisForm.firstMoveDelay);
       }
       else {
          this.disableUI(false);
@@ -316,7 +319,7 @@ TicTacToeForm.prototype = {
             return;
         }
         thisForm.disableUI(false);
-      }, 10);
+      }, thisForm.computerMoveDelay);
    },
 
    createHandler: function(row,col) {
