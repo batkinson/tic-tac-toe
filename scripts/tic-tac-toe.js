@@ -289,13 +289,16 @@ TicTacToeForm.prototype = {
          ".tictactoe heading": "{ display: table-row; line-height: 300%; }",
          ".tictactoe form": "{ display: table-cell; }",
          ".tictactoe button:focus": "{ outline: none; }",
-         ".tictactoe button": "{ width: 100px; height: 100px; font-size: 72px; vertical-align: top; background: none; border: none; color: black; }",
+         ".tictactoe button": "{ width: 100px; height: 100px; font-size: 72px; vertical-align: top; color: black; }",
       };
 
-      rules[".tictactoe form > button:nth-of-type(" + size + "n+1)"] = "{ border-right: 5px solid black; }";
-      rules[".tictactoe form > button:nth-of-type(" + size + "n+"+ size +")"] = "{ border-left: 5px solid black; }";
-      rules[".tictactoe form > button:nth-of-type(-n+" + size + ")"] = "{ border-bottom: 5px solid black; }";
-      rules[".tictactoe form > button:nth-last-of-type(-n+" + size + ")"] = "{ border-top: 5px solid black; }";
+      if (size == 3) {
+         rules[".tictactoe button"] = "{ width: 100px; height: 100px; font-size: 72px; vertical-align: top; color: black; background: none; border: none; }";
+         rules[".tictactoe form > button:nth-of-type(3n+1)"] = "{ border-right: 5px solid black; }";
+         rules[".tictactoe form > button:nth-of-type(3n+3)"] = "{ border-left: 5px solid black; }";
+         rules[".tictactoe form > button:nth-of-type(-n+3)"] = "{ border-bottom: 5px solid black; }";
+         rules[".tictactoe form > button:nth-last-of-type(-n+3)"] = "{ border-top: 5px solid black; }";
+      }
 
       for (selector in rules) {
          if (sheet.insertRule)
