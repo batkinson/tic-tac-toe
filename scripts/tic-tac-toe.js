@@ -13,7 +13,7 @@ Player.prototype = {
 };
 
 
-// Player constants
+// Players 
 var PLAYER = new Player('X');
 var COMPUTER = new Player('O');
 
@@ -33,12 +33,13 @@ function TicTacToe(size,lastState) {
       this.grid = new Array(this.moveMax);
       this.lines = new Array();
       this.moves = 0;
+      this.init();
    }
 }
 
 TicTacToe.prototype = {
 
-   buildGame: function() {
+   init: function() {
 
       // Build rows/cols
       for (var i=0; i<this.size; i++) {
@@ -61,6 +62,12 @@ TicTacToe.prototype = {
       }
       this.lines.push(diag1);
       this.lines.push(diag2);
+   },
+
+   reset: function() {
+      this.moves = 0;
+      for (var cell=0; cell<this.grid.length; cell++)
+         this.grid[cell] = undefined;
    },
 
    setCell: function(row,col,player) {
@@ -176,11 +183,11 @@ TicTacToe.prototype = {
    },
 
    toString: function() {
+      var gridStr = '';
       for (var row = 0; row<this.size; row++) {
          for (var col = 0; col<this.size; col++) {
             gridStr += (this.cellAvailable(row,col)? " " : this.getCell(row,col));
          }
-         gridStr += "\n";
       }
       return gridStr;
    }
@@ -203,9 +210,10 @@ function TicTacToeForm(elemId, gridSize) {
    this.resultElem;
    this.heading = "Tic Tac Toe";
    this.size = gridSize;
+   this.playerFirst = true;
 
-   this.game.buildGame();
    this.createUI();
+   this.startGame(true);
 }
 
 TicTacToeForm.prototype = {
@@ -225,7 +233,7 @@ TicTacToeForm.prototype = {
 
    showResult: function() {
 
-      thisForm = this;
+      var thisForm = this;
       var show = function(text) {
          window.setTimeout(function() {
             thisForm.resultElem.innerHTML = text;
@@ -242,13 +250,48 @@ TicTacToeForm.prototype = {
          show("A Draw.");
    },
 
-   disableButtons: function (disabled) {
+   showForm: function() {
+      this.formElem.style.display = 'table-cell';
+      this.resultElem.style.display = 'none';
+   },
+
+   disableUI: function (disabled) {
       for (var row=0; row<this.game.size; row++) {
          for (var col=0; col<this.game.size; col++) {
             var button = this.button(row,col);
             button.disabled = disabled || !this.game.cellAvailable(row,col);
          }
       }
+   },
+
+   resetGame: function() {
+      this.disableUI(true);
+      this.game.reset();
+      this.updateUI();
+      this.showForm();
+   },
+
+   startGame: function(playerFirst) {
+      PLAYER.label = playerFirst? 'X' : 'O';
+      COMPUTER.label = playerFirst? 'O' : 'X';
+      if (!playerFirst) {
+         // delay move so the user sees it happen
+         var thisForm = this;
+         window.setTimeout(function() {
+            thisForm.computerFirstMove();
+            thisForm.disableUI(false);
+         },500);
+      }
+      else {
+         this.disableUI(false);
+      }
+   }, 
+
+   computerFirstMove: function() {
+      // We don't bother thinking or checking for game over, it's the opener.
+      var randRow = parseInt(this.size * Math.random(),10);
+      var randCol = parseInt(this.size * Math.random(),10);
+      this.markAndUpdate(randRow,randCol,COMPUTER);
    },
 
    makeMove: function(row,col) {
@@ -262,7 +305,7 @@ TicTacToeForm.prototype = {
          return;
       }
 
-      this.disableButtons(true);
+      this.disableUI(true);
 
       var thisForm = this;
       window.setTimeout(function() {
@@ -272,7 +315,7 @@ TicTacToeForm.prototype = {
             thisForm.showResult();
             return;
         }
-        thisForm.disableButtons(false);
+        thisForm.disableUI(false);
       }, 10);
    },
 
@@ -327,6 +370,7 @@ TicTacToeForm.prototype = {
          for (var col=0; col<size; col++) {
             var buttonElem = document.createElement('button');
             buttonElem.setAttribute('id', this.buttonId(row,col));
+            buttonElem.setAttribute('disabled','true');
             buttonElem.onclick = this.createHandler(row,col);
             formElem.appendChild(buttonElem);
          }
@@ -336,7 +380,14 @@ TicTacToeForm.prototype = {
       gameElem.appendChild(formElem);
 
       var resultElem = this.resultElem = document.createElement('result');
-      resultElem.onclick = function() { location.reload(); };
+
+      var thisForm = this;
+      resultElem.onclick = function() { 
+         thisForm.resetGame(); 
+         thisForm.playerFirst = !thisForm.playerFirst;
+         thisForm.startGame(thisForm.playerFirst); 
+      };
+
       gameElem.appendChild(resultElem);
 
       gameElem.className += " tictactoe";
