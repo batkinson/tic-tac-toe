@@ -279,6 +279,7 @@ TicTacToeForm.prototype = {
 
       var sheet = document.styleSheets[document.styleSheets.length - 1];
 
+      var gameElem = this.elem;
       var size = this.size;
 
       var rules = {
@@ -303,7 +304,6 @@ TicTacToeForm.prototype = {
             sheet.addRule(selector, rules[selector]);
       }
 
-      var gameElem = this.elem;
 
       var headingElem = document.createElement('heading');
       headingElem.appendChild(document.createTextNode(this.heading));
@@ -323,7 +323,6 @@ TicTacToeForm.prototype = {
          formElem.appendChild(document.createElement('br'));
       }
       gameElem.appendChild(formElem);
-      this.elem.appendChild(gameElem);
    },
 
    gridLabel: function(row,col) {
