@@ -68,6 +68,8 @@ TicTacToe.prototype = {
       this.moves = 0;
       for (var cell=0; cell<this.grid.length; cell++)
          this.grid[cell] = undefined;
+      this.winningLine = undefined;
+      this.winner = undefined;
    },
 
    setCell: function(row,col,player) {
@@ -83,10 +85,16 @@ TicTacToe.prototype = {
       return typeof this.getCell(row,col) === "undefined";
    },
 
+   getWinningLine: function() {
+      return this.lines[this.winningLine];
+   },
+
    getWinner: function() {
 
       if (typeof this.winner !== "undefined")
          return this.winner;
+
+      var winningLine;
 
       linescan:
       for (var l=0; l<this.lines.length; l++) {
@@ -95,13 +103,16 @@ TicTacToe.prototype = {
          for (var c=0; c<this.size; c++) {
             var cell = line[c];
             var cellVal = this.getCell(cell[0],cell[1]);
-            if (typeof cellVal === "undefined")
+            if (typeof cellVal === "undefined") {
                continue linescan;
-            else if (typeof winner === "undefined")
+            } else if (typeof winner === "undefined") {
                winner = cellVal;
-            else if (cellVal !== winner)
+               winningLine = l;
+            } else if (cellVal !== winner){
                continue linescan;
+            }
          }
+         this.winningLine = winningLine;
          return winner;
       }
    },
@@ -211,7 +222,7 @@ function TicTacToeForm(elemId, gridSize) {
    this.heading = "Tic Tac Toe";
    this.size = gridSize;
    this.playerFirst = true;
-   this.resultDelay = 1000;
+   this.resultDelay = 2000;
    this.firstMoveDelay = 1000;
    this.computerMoveDelay = 10;
 
@@ -245,12 +256,33 @@ TicTacToeForm.prototype = {
          },thisForm.resultDelay);
       };
 
-      if (this.game.getWinner() === PLAYER)
+      if (this.game.getWinner() === PLAYER) {
+         this.showWinningMove();
          show('You Win!');
-      else if (this.game.getWinner() === COMPUTER)
+      } else if (this.game.getWinner() === COMPUTER) {
+         this.showWinningMove();
          show('You Lose.');
-      else
+      } else
          show("A Draw.");
+   },
+
+   showWinningMove: function(show) {
+
+      if (typeof show === "undefined") {
+         show = true;
+      }
+
+      var winLine = this.game.getWinningLine();
+
+      if (typeof winLine === "undefined") {
+         return;
+      }
+
+      for (var cell=0; cell<winLine.length; cell++) {
+         var winCell = winLine[cell];
+         var winButton = this.button(winCell[0],winCell[1]);
+         winButton.className = show? "tttwinner" : "";
+      }
    },
 
    showForm: function() {
@@ -269,6 +301,7 @@ TicTacToeForm.prototype = {
 
    resetGame: function() {
       this.disableUI(true);
+      this.showWinningMove(false);
       this.game.reset();
       this.updateUI();
       this.showForm();
@@ -346,6 +379,7 @@ TicTacToeForm.prototype = {
          ".tictactoe button:focus": "{ outline: none; }",
          ".tictactoe button": "{ width: 100px; height: 100px; font-size: 72px; vertical-align: top; color: black; }",
          ".tictactoe result": "{ display: none; width: " + size * 100 + "px; height: " + size * 100 + "px; font-size: 150%; }",
+         ".tictactoe button.tttwinner": "{ background-color: #F2F760; transition: background-color 1s; -webkit-transition: background-color 1s; -o-transition: background-color 1s; -moz-transition: background-color 1s;}",
       };
 
       if (size == 3) {
