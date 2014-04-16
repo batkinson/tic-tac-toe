@@ -24,11 +24,13 @@ var COMPUTER = new Player('O');
 function TicTacToe(size,lastState) {
    this.size = size;
    if (typeof lastState !== "undefined") {
+      // shallow copy for move speculation (state space search)
       this.moveMax = lastState.moveMax;
       this.grid = lastState.grid.slice(0);
       this.lines = lastState.lines;
       this.moves = lastState.moves;
    } else {
+      // Normal game initialization
       this.moveMax = this.size * this.size;
       this.grid = new Array(this.moveMax);
       this.lines = new Array();
@@ -41,7 +43,7 @@ TicTacToe.prototype = {
 
    init: function() {
 
-      // Build rows/cols
+      // Build index of horizontal and vertical win lines
       for (var i=0; i<this.size; i++) {
          var row = new Array(this.size);
          var col = new Array(this.size);
@@ -53,7 +55,7 @@ TicTacToe.prototype = {
          this.lines.push(col);
       }
 
-      // Build diagonal lines
+      // Add diagonal win lines to the index
       var diag1 = new Array(this.size);
       var diag2 = new Array(this.size);
       for (var i=0; i<this.size; i++) {
@@ -64,6 +66,7 @@ TicTacToe.prototype = {
       this.lines.push(diag2);
    },
 
+   // Makes this object to be reused for another game
    reset: function() {
       this.moves = 0;
       for (var cell=0; cell<this.grid.length; cell++)
@@ -72,23 +75,28 @@ TicTacToe.prototype = {
       this.winner = undefined;
    },
 
+   // Marks a cell with the player who selected it (a move)
    setCell: function(row,col,player) {
       this.grid[row * this.size + col] = player;
       this.moves++;
    },
 
+   // Returns the player who owns the specified cell
    getCell: function(row,col) {
       return this.grid[row * this.size + col];
    },
 
+   // Convenience method for whether a cell can be played
    cellAvailable: function(row,col) {
       return typeof this.getCell(row,col) === "undefined";
    },
 
+   // Returns the coordinates for the cells that won the game
    getWinningLine: function() {
       return this.lines[this.winningLine];
    },
 
+   // Returns the player that won the game
    getWinner: function() {
 
       if (typeof this.winner !== "undefined")
@@ -117,6 +125,7 @@ TicTacToe.prototype = {
       }
    },
 
+   // Returns whether is completed, either someone won or moves were exhausted
    isGameComplete: function() {
       if (this.moves >= this.moveMax) {
          return true;
@@ -128,6 +137,7 @@ TicTacToe.prototype = {
       return false;
    },
 
+   // Returns the hueristic score for this game state for the given search depth
    scoreGrid: function(depth) {
       var winner = this.getWinner();
       if (typeof winner === "undefined") return 0;
@@ -135,12 +145,15 @@ TicTacToe.prototype = {
       if (winner === COMPUTER) return 10-depth; // non-negative
    },
 
+   // Returns a game state based on this one, with the specified move played
    speculate: function(row,col,player) {
       var specState = new TicTacToe(this.size, this);
       specState.setCell(row,col,player);
       return specState;
    },
 
+   // Returns optimal next move for the specified player for this game state
+   // This is a variant of minimax with alpha-beta pruning for better speed
    optimalMove: function(player,depth,alpha,beta) {
 
       if (typeof depth === "undefined") {
@@ -193,6 +206,7 @@ TicTacToe.prototype = {
          return beta;
    },
 
+   // Converts game state into a form usable for hash keys
    toString: function() {
       var gridStr = '';
       for (var row = 0; row<this.size; row++) {
@@ -206,7 +220,7 @@ TicTacToe.prototype = {
 
 
 /**
- * Constructor for form object. Turns the form into a tic-tac-toe UI.
+ * Constructor for form object. Turns the specified element into a game UI.
  */
 function TicTacToeForm(elemId, gridSize) {
 
@@ -227,24 +241,30 @@ function TicTacToeForm(elemId, gridSize) {
    this.computerMoveDelay = 10;
 
    this.createUI();
+
+   // First time around, human player starts the game
    this.startGame(true);
 }
 
 TicTacToeForm.prototype = {
 
+   // Construct element id for button of specified row/col
    buttonId: function buttonId(row,col) {
       return row + 'x' + col;
    },
 
+   // Returns the button for the specified row/col
    button: function(row,col) {
       return document.getElementById(this.buttonId(row,col));
    },
 
+   // Marks a cell for a player and updates the UI to match
    markAndUpdate: function(row,col,player) {
       this.game.setCell(row,col,player);
       this.updateUI();
    },
 
+   // Called upon game completion, shows the game result
    showResult: function() {
 
       var thisForm = this;
@@ -266,6 +286,7 @@ TicTacToeForm.prototype = {
          show("A Draw.");
    },
 
+   // Called upon game completion, but before result - highlights winning line
    showWinningMove: function(show) {
 
       if (typeof show === "undefined") {
@@ -285,11 +306,13 @@ TicTacToeForm.prototype = {
       }
    },
 
+   // Used to hide the game result (if showing) and show the game grid form 
    showForm: function() {
       this.formElem.style.display = 'table-cell';
       this.resultElem.style.display = 'none';
    },
 
+   // Disables/enabled tic-tac-toe grid for user input
    disableUI: function (disabled) {
       for (var row=0; row<this.game.size; row++) {
          for (var col=0; col<this.game.size; col++) {
@@ -299,6 +322,7 @@ TicTacToeForm.prototype = {
       }
    },
 
+   // Resets the game form so it is possible to play another game
    resetGame: function() {
       this.disableUI(true);
       this.showWinningMove(false);
@@ -307,6 +331,7 @@ TicTacToeForm.prototype = {
       this.showForm();
    },
 
+   // Starts the game as player or computer, valid initially and after reset
    startGame: function(playerFirst) {
       PLAYER.label = playerFirst? 'X' : 'O';
       COMPUTER.label = playerFirst? 'O' : 'X';
@@ -323,6 +348,7 @@ TicTacToeForm.prototype = {
       }
    }, 
 
+   // Plays initial move for computer - random move, skips game end test
    computerFirstMove: function() {
       // We don't bother thinking or checking for game over, it's the opener.
       var randRow = parseInt(this.size * Math.random(),10);
@@ -330,10 +356,11 @@ TicTacToeForm.prototype = {
       this.markAndUpdate(randRow,randCol,COMPUTER);
    },
 
+   // Plays player move, then a computer move - ending game when appropriate
    makeMove: function(row,col) {
 
       if (this.game.isGameComplete()) {
-         alert('Game is already over, refresh to play again.')
+         alert('Game is over.')
       }
       this.markAndUpdate(row,col,PLAYER);
       if (this.game.isGameComplete()) {
@@ -355,11 +382,13 @@ TicTacToeForm.prototype = {
       }, thisForm.computerMoveDelay);
    },
 
+   // Creates a click handler for specified row/col button (knows coordinates)
    createHandler: function(row,col) {
       var gameForm = this;
       return function() { gameForm.makeMove(row,col); return false; }
    },
 
+   // Builds and attaches HTML/CSS based UI using DOM
    createUI: function() {
 
       var newStyle = document.createElement('style');
@@ -430,6 +459,7 @@ TicTacToeForm.prototype = {
       gameElem.className += " tictactoe";
    },
 
+   // Convenience method for getting the X/ /O labels for game cells
    gridLabel: function(row,col) {
       var player = this.game.getCell(row,col);
       if (typeof player === "object")
@@ -437,6 +467,7 @@ TicTacToeForm.prototype = {
       return ' ';
    },
 
+   // Causes a batch update from game model to UI buttons
    updateUI: function() {
       var size = this.game.size;
       for (var row=0; row<size; row++) {
