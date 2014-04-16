@@ -222,7 +222,7 @@ function TicTacToeForm(elemId, gridSize) {
    this.heading = "Tic Tac Toe";
    this.size = gridSize;
    this.playerFirst = true;
-   this.resultDelay = 2000;
+   this.resultDelay = 1500;
    this.firstMoveDelay = 1000;
    this.computerMoveDelay = 10;
 
