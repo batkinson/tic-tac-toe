@@ -51,7 +51,7 @@ TicTacToe.prototype = {
          this.lines.push(row);
          this.lines.push(col);
       }
-      
+
       // Build diagonal lines
       var diag1 = new Array(this.size);
       var diag2 = new Array(this.size);
@@ -109,11 +109,11 @@ TicTacToe.prototype = {
       }
       return false;
    },
-   
+
    scoreGrid: function(depth) {
       var winner = this.getWinner();
       if (typeof winner === "undefined") return 0;
-      if (winner === PLAYER) return depth-10; // non-positive 
+      if (winner === PLAYER) return depth-10; // non-positive
       if (winner === COMPUTER) return 10-depth; // non-negative
    },
 
@@ -169,7 +169,7 @@ TicTacToe.prototype = {
          }
       }
 
-      if (maximizing) 
+      if (maximizing)
          return alpha;
       else
          return beta;
@@ -182,7 +182,7 @@ TicTacToe.prototype = {
          }
          gridStr += "\n";
       }
-      return gridStr; 
+      return gridStr;
    }
 };
 
@@ -199,9 +199,11 @@ function TicTacToeForm(elemId, gridSize) {
    this.game = new TicTacToe(gridSize);
    this.elemId = elemId;
    this.elem = document.getElementById(elemId);
+   this.formElem;
+   this.resultElem;
    this.heading = "Tic Tac Toe";
    this.size = gridSize;
-   
+
    this.game.buildGame();
    this.createUI();
 }
@@ -221,16 +223,23 @@ TicTacToeForm.prototype = {
       this.updateUI();
    },
 
-   alertWinner: function() {
-      if (this.game.getWinner() === PLAYER) {
-         alert('You win!');
-      }
-      if (this.game.getWinner() === COMPUTER) {
-         alert('Computer wins!');
-      }
-      else {
-         alert("It's a Draw!");
-      }
+   showResult: function() {
+
+      thisForm = this;
+      var show = function(text) {
+         window.setTimeout(function() {
+            thisForm.resultElem.innerText = text;
+            thisForm.formElem.style.display = "none";
+            thisForm.resultElem.style.display = "table-cell";
+         },500);
+      };
+
+      if (this.game.getWinner() === PLAYER)
+         show('You Win!');
+      else if (this.game.getWinner() === COMPUTER)
+         show('You Lose.');
+      else
+         show("A Draw.");
    },
 
    disableButtons: function (disabled) {
@@ -249,7 +258,7 @@ TicTacToeForm.prototype = {
       }
       this.markAndUpdate(row,col,PLAYER);
       if (this.game.isGameComplete()) {
-         this.alertWinner();
+         this.showResult();
          return;
       }
 
@@ -260,7 +269,7 @@ TicTacToeForm.prototype = {
          var nextMove = thisForm.game.optimalMove(COMPUTER);
          thisForm.markAndUpdate(nextMove.row,nextMove.col,COMPUTER);
          if (thisForm.game.isGameComplete()) {
-            thisForm.alertWinner();
+            thisForm.showResult();
             return;
         }
         thisForm.disableButtons(false);
@@ -290,6 +299,7 @@ TicTacToeForm.prototype = {
          ".tictactoe form": "{ display: table-cell; }",
          ".tictactoe button:focus": "{ outline: none; }",
          ".tictactoe button": "{ width: 100px; height: 100px; font-size: 72px; vertical-align: top; color: black; }",
+         ".tictactoe result": "{ display: none; width: " + size * 100 + "px; height: " + size * 100 + "px; font-size: 150%; }",
       };
 
       if (size == 3) {
@@ -310,12 +320,9 @@ TicTacToeForm.prototype = {
 
       var headingElem = document.createElement('heading');
       headingElem.appendChild(document.createTextNode(this.heading));
-
-      var formElem = document.createElement('form');
-
       gameElem.appendChild(headingElem);
-      gameElem.className += " tictactoe";
 
+      var formElem = this.formElem = document.createElement('form');
       for (var row=0; row<size; row++) {
          for (var col=0; col<size; col++) {
             var buttonElem = document.createElement('button');
@@ -325,7 +332,13 @@ TicTacToeForm.prototype = {
          }
          formElem.appendChild(document.createElement('br'));
       }
+
       gameElem.appendChild(formElem);
+
+      var resultElem = this.resultElem = document.createElement('result');
+      gameElem.appendChild(resultElem);
+
+      gameElem.className += " tictactoe";
    },
 
    gridLabel: function(row,col) {
