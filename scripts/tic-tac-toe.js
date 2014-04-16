@@ -228,7 +228,7 @@ TicTacToeForm.prototype = {
       thisForm = this;
       var show = function(text) {
          window.setTimeout(function() {
-            thisForm.resultElem.innerText = text;
+            thisForm.resultElem.innerHTML = text;
             thisForm.formElem.style.display = "none";
             thisForm.resultElem.style.display = "table-cell";
          },500);
