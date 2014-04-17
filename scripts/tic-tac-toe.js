@@ -233,6 +233,7 @@ function TicTacToeForm(elemId) {
    this.elem = document.getElementById(elemId);
    this.formElem;
    this.resultElem;
+   this.statusElem;
    this.heading = "Tic Tac Toe";
    this.size = 3;
    this.playerFirst = true;
@@ -263,6 +264,10 @@ TicTacToeForm.prototype = {
    markAndUpdate: function(row,col,player) {
       this.game.setCell(row,col,player);
       this.updateUI();
+   },
+
+   setStatus: function(message) {
+      this.statusElem.innerHTML = message;
    },
 
    // Called upon game completion, shows the game result
@@ -396,9 +401,12 @@ TicTacToeForm.prototype = {
       var sheet = document.styleSheets[document.styleSheets.length - 1];
 
       var rules = {
-         ".tictactoe ": "{ font-family: 'Rokkitt', serif; font-size: 200%; color: black; }",
-         ".tictactoe heading": "{ display: block; text-align: center; line-height: 96px; }",
-         ".tictactoe game": "{ display: block; position: relative; }",
+         ".tictactoe": "{ font-family: 'Rokkitt', serif; font-size: 200%; color: black; }",
+         ".tictactoe heading, .tictactoe status": "{ display: block; text-align: center; }",
+         ".tictactoe heading": "{ line-height: 96px; }",
+         ".tictactoe status": "{ line-height: 84px; font-size: 75%; }",
+         ".tictactoe ": "{ display: block; text-align: center; line-height: 96px; }",
+         ".tictactoe game": "{ display: block; position: relative; width: 320px; height: 300px; }",
          ".tictactoe game > *": "{ background-color: white; width: 320px; height: 300px; }",
          ".tictactoe form": "{ position: absolute; top: 0px; display: block; text-align: center; }",
          ".tictactoe result ": "{ display: table; position: absolute; top: 0px; z-index: -1; font-size: 150%; opacity: .9; }",
@@ -449,8 +457,12 @@ TicTacToeForm.prototype = {
       };
       gameElem.appendChild(resultElem);
 
+
       this.elem.className += " tictactoe";
       this.elem.appendChild(gameElem);
+
+      var statusElem = this.statusElem = document.createElement('status');
+      this.elem.appendChild(statusElem);
    },
 
    // Convenience method for getting the X/ /O labels for game cells
