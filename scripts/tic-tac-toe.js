@@ -238,9 +238,9 @@ function TicTacToeForm(elemId) {
    this.size = 3;
    this.playerFirst = true;
    this.resultDelay = 1000;
-   this.drawResultDelay = 500;
+   this.drawResultDelay = 1000;
    this.firstMoveDelay = 1000;
-   this.computerMoveDelay = 10;
+   this.computerMoveDelay = 500;
 
    this.createUI();
 
