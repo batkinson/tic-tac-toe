@@ -13,7 +13,7 @@ Player.prototype = {
 };
 
 
-// Players 
+// Players
 var PLAYER = new Player('X');
 var COMPUTER = new Player('O');
 
@@ -231,21 +231,20 @@ function TicTacToeForm(elemId) {
    this.game = new TicTacToe(gridSize);
    this.elemId = elemId;
    this.elem = document.getElementById(elemId);
+   this.playerselElem;
    this.gridElem;
    this.resultElem;
    this.statusElem;
    this.heading = "Tic Tac Toe";
    this.size = 3;
-   this.playerFirst = true;
+   this.playerFirst;
    this.resultDelay = 1000;
    this.drawResultDelay = 1000;
    this.firstMoveDelay = 1000;
    this.computerMoveDelay = 500;
 
    this.createUI();
-
-   // First time around, human player starts the game
-   this.startGame(true);
+   this.selectPlayer();
 }
 
 TicTacToeForm.prototype = {
@@ -276,17 +275,22 @@ TicTacToeForm.prototype = {
       this.setStatus('');
    },
 
+   selectPlayer: function() {
+      this.playerselElem.style.zIndex = "1";
+      this.setStatus("Select who moves first.");
+   },
+
    // Called upon game completion, shows the game result
    showResult: function() {
 
       this.setStatus("Game over.");
 
-      var thisForm = this;
+      var thisUI = this;
       var show = function(text, delay) {
          window.setTimeout(function() {
-            thisForm.resultElem.innerHTML = '<message>' + text + '</message>';
-            thisForm.resultElem.style.zIndex = "1";
-            thisForm.setStatus("Click to play again.");
+            thisUI.resultElem.innerHTML = '<message>' + text + '</message>';
+            thisUI.resultElem.style.zIndex = "1";
+            thisUI.setStatus("Click to play again.");
          },delay);
       };
 
@@ -320,9 +324,10 @@ TicTacToeForm.prototype = {
       }
    },
 
-   // Used to hide the game result (if showing) and show the game grid
-   showForm: function() {
+   // Used to hide other panes and show the game grid
+   showGrid: function() {
       this.resultElem.style.zIndex = '-1';
+      this.playerselElem.style.zIndex = '-1';
    },
 
    // Disables/enabled tic-tac-toe grid for user input
@@ -341,7 +346,6 @@ TicTacToeForm.prototype = {
       this.showWinningMove(false);
       this.game.reset();
       this.updateUI();
-      this.showForm();
    },
 
    enablePlayer: function(enable) {
@@ -355,21 +359,24 @@ TicTacToeForm.prototype = {
    },
 
    // Starts the game as player or computer, valid initially and after reset
-   startGame: function(playerFirst) {
+   startGame: function() {
+      var playerFirst = this.playerFirst;
       PLAYER.label = playerFirst? 'X' : 'O';
       COMPUTER.label = playerFirst? 'O' : 'X';
+      this.clearStatus();
+      this.showGrid();
       if (!playerFirst) {
          // delay move so the user sees it happen
-         var thisForm = this;
+         var thisUI = this;
          window.setTimeout(function() {
-            thisForm.computerFirstMove();
-            thisForm.enablePlayer(true);
-         },thisForm.firstMoveDelay);
+            thisUI.computerFirstMove();
+            thisUI.enablePlayer(true);
+         },thisUI.firstMoveDelay);
       }
       else {
          this.enablePlayer(true);
       }
-   }, 
+   },
 
    // Plays initial move for computer - random move, skips game end test
    computerFirstMove: function() {
@@ -395,16 +402,16 @@ TicTacToeForm.prototype = {
 
       this.enablePlayer(false);
 
-      var thisForm = this;
+      var thisUI = this;
       window.setTimeout(function() {
-         var nextMove = thisForm.game.optimalMove(COMPUTER);
-         thisForm.markAndUpdate(nextMove.row,nextMove.col,COMPUTER);
-         if (thisForm.game.isGameComplete()) {
-            thisForm.showResult();
+         var nextMove = thisUI.game.optimalMove(COMPUTER);
+         thisUI.markAndUpdate(nextMove.row,nextMove.col,COMPUTER);
+         if (thisUI.game.isGameComplete()) {
+            thisUI.showResult();
             return;
          }
-         thisForm.enablePlayer(true);
-      }, thisForm.computerMoveDelay);
+         thisUI.enablePlayer(true);
+      }, thisUI.computerMoveDelay);
    },
 
    // Creates a click handler for specified row/col button (knows coordinates)
@@ -416,6 +423,8 @@ TicTacToeForm.prototype = {
    // Builds and attaches HTML/CSS based UI using DOM
    createUI: function() {
 
+      var thisUI = this; // For click handling closures
+
       var newStyle = document.createElement('style');
       document.getElementsByTagName('head')[0].appendChild(newStyle);
 
@@ -426,9 +435,12 @@ TicTacToeForm.prototype = {
          ".tictactoe heading, .tictactoe status": "{ display: block; text-align: center; }",
          ".tictactoe heading": "{ line-height: 96px; }",
          ".tictactoe status": "{ line-height: 84px; font-size: 75%; }",
-         ".tictactoe ": "{ display: block; text-align: center; line-height: 96px; }",
          ".tictactoe game": "{ display: block; position: relative; width: 320px; height: 300px; }",
          ".tictactoe game > *": "{ background-color: white; width: 320px; height: 300px; }",
+         ".tictactoe playersel": "{ position: absolute; display: table; top: 0px; z-index: 1 }",
+         ".tictactoe playersel choice": "{ display: table-cell; text-align: center; vertical-align: middle; }",
+         ".tictactoe playersel choice message": "{ display: block; font-size: 150%; line-height: 85px; }",
+         ".tictactoe .fa": "{ display: inline-block; font-size: 100px; width: 160px; }",
          ".tictactoe grid": "{ position: absolute; top: 0px; display: block; text-align: center; }",
          ".tictactoe result ": "{ display: table; position: absolute; top: 0px; z-index: -1; font-size: 150%; opacity: .9; }",
          ".tictactoe result message": "{ display: table-cell; text-align: center; vertical-align: middle; }",
@@ -453,9 +465,25 @@ TicTacToeForm.prototype = {
       headingElem.appendChild(document.createTextNode(this.heading));
       this.elem.appendChild(headingElem);
 
-      var gridElem = this.gridElem = document.createElement('grid');
-
       var gameElem = document.createElement('game');
+
+      var playerselElem = this.playerselElem = document.createElement('playersel');
+      var choiceElem = document.createElement('choice');
+      var selMsgElem = document.createElement('message');
+      selMsgElem.appendChild(document.createTextNode('Who starts?'));
+      choiceElem.appendChild(selMsgElem);
+      var playerElem = document.createElement('i');
+      playerElem.onclick = function() { thisUI.playerFirst=true; thisUI.startGame(); };
+      playerElem.className = "fa fa-user";
+      var computerElem = document.createElement('i');
+      computerElem.onclick = function() { thisUI.playerFirst=false; thisUI.startGame(); };
+      computerElem.className = "fa fa-laptop";
+      choiceElem.appendChild(playerElem);
+      choiceElem.appendChild(computerElem);
+      playerselElem.appendChild(choiceElem);
+      gameElem.appendChild(playerselElem);
+
+      var gridElem = this.gridElem = document.createElement('grid');
       var size = this.size;
       for (var row=0; row<size; row++) {
          for (var col=0; col<size; col++) {
@@ -470,11 +498,10 @@ TicTacToeForm.prototype = {
       gameElem.appendChild(gridElem);
 
       var resultElem = this.resultElem = document.createElement('result');
-      var thisForm = this;
-      resultElem.onclick = function() { 
-         thisForm.resetGame(); 
-         thisForm.playerFirst = !thisForm.playerFirst;
-         thisForm.startGame(thisForm.playerFirst); 
+      resultElem.onclick = function() {
+         thisUI.resetGame();
+         thisUI.playerFirst = !thisUI.playerFirst;
+         thisUI.startGame(thisUI.playerFirst);
       };
       gameElem.appendChild(resultElem);
 
