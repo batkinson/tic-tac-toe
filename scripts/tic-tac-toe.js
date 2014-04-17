@@ -206,7 +206,7 @@ TicTacToe.prototype = {
          return beta;
    },
 
-   // Converts game state into a form usable for hash keys
+   // Converts game state into acceptable hash key
    toString: function() {
       var gridStr = '';
       for (var row = 0; row<this.size; row++) {
@@ -220,7 +220,7 @@ TicTacToe.prototype = {
 
 
 /**
- * Constructor for form object. Turns the specified element into a game UI.
+ * Constructor for user interface. Turns the specified element into a game UI.
  */
 function TicTacToeForm(elemId) {
 
@@ -231,7 +231,7 @@ function TicTacToeForm(elemId) {
    this.game = new TicTacToe(gridSize);
    this.elemId = elemId;
    this.elem = document.getElementById(elemId);
-   this.formElem;
+   this.gridElem;
    this.resultElem;
    this.statusElem;
    this.heading = "Tic Tac Toe";
@@ -320,7 +320,7 @@ TicTacToeForm.prototype = {
       }
    },
 
-   // Used to hide the game result (if showing) and show the game grid form 
+   // Used to hide the game result (if showing) and show the game grid
    showForm: function() {
       this.resultElem.style.zIndex = '-1';
    },
@@ -335,7 +335,7 @@ TicTacToeForm.prototype = {
       }
    },
 
-   // Resets the game form so it is possible to play another game
+   // Resets so it is possible to play another game
    resetGame: function() {
       this.enablePlayer(false);
       this.showWinningMove(false);
@@ -429,16 +429,16 @@ TicTacToeForm.prototype = {
          ".tictactoe ": "{ display: block; text-align: center; line-height: 96px; }",
          ".tictactoe game": "{ display: block; position: relative; width: 320px; height: 300px; }",
          ".tictactoe game > *": "{ background-color: white; width: 320px; height: 300px; }",
-         ".tictactoe form": "{ position: absolute; top: 0px; display: block; text-align: center; }",
+         ".tictactoe grid": "{ position: absolute; top: 0px; display: block; text-align: center; }",
          ".tictactoe result ": "{ display: table; position: absolute; top: 0px; z-index: -1; font-size: 150%; opacity: .9; }",
          ".tictactoe result message": "{ display: table-cell; text-align: center; vertical-align: middle; }",
          ".tictactoe button.tttwinner": "{ background-color: #F2F760; transition: background-color .5s; -webkit-transition: background-color .5s; -o-transition: background-color .5s; -moz-transition: background-color .5s;}",
          ".tictactoe button:focus": "{ outline: none; }",
          ".tictactoe button": "{ width: 100px; height: 100px; font-size: 72px; vertical-align: top; color: black; background: none; border: none; }",
-         ".tictactoe form > button:nth-of-type(3n+1)": "{ border-right: 5px solid black; }",
-         ".tictactoe form > button:nth-of-type(3n+3)": "{ border-left: 5px solid black; }",
-         ".tictactoe form > button:nth-of-type(-n+3)": "{ border-bottom: 5px solid black; }",
-         ".tictactoe form > button:nth-last-of-type(-n+3)": "{ border-top: 5px solid black; }"
+         ".tictactoe grid > button:nth-of-type(3n+1)": "{ border-right: 5px solid black; }",
+         ".tictactoe grid > button:nth-of-type(3n+3)": "{ border-left: 5px solid black; }",
+         ".tictactoe grid > button:nth-of-type(-n+3)": "{ border-bottom: 5px solid black; }",
+         ".tictactoe grid > button:nth-last-of-type(-n+3)": "{ border-top: 5px solid black; }"
       };
 
 
@@ -453,7 +453,7 @@ TicTacToeForm.prototype = {
       headingElem.appendChild(document.createTextNode(this.heading));
       this.elem.appendChild(headingElem);
 
-      var formElem = this.formElem = document.createElement('form');
+      var gridElem = this.gridElem = document.createElement('grid');
 
       var gameElem = document.createElement('game');
       var size = this.size;
@@ -463,11 +463,11 @@ TicTacToeForm.prototype = {
             buttonElem.setAttribute('id', this.buttonId(row,col));
             buttonElem.setAttribute('disabled','true');
             buttonElem.onclick = this.createHandler(row,col);
-            formElem.appendChild(buttonElem);
+            gridElem.appendChild(buttonElem);
          }
-         formElem.appendChild(document.createElement('br'));
+         gridElem.appendChild(document.createElement('br'));
       }
-      gameElem.appendChild(formElem);
+      gameElem.appendChild(gridElem);
 
       var resultElem = this.resultElem = document.createElement('result');
       var thisForm = this;
