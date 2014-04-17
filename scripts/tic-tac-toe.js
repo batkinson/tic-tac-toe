@@ -266,18 +266,27 @@ TicTacToeForm.prototype = {
       this.updateUI();
    },
 
+   // Shows an instructive status message
    setStatus: function(message) {
       this.statusElem.innerHTML = message;
    },
 
+   // Clear the existing status message
+   clearStatus: function() {
+      this.setStatus('');
+   },
+
    // Called upon game completion, shows the game result
    showResult: function() {
+
+      this.setStatus("Game over.");
 
       var thisForm = this;
       var show = function(text, delay) {
          window.setTimeout(function() {
             thisForm.resultElem.innerHTML = '<message>' + text + '</message>';
             thisForm.resultElem.style.zIndex = "1";
+            thisForm.setStatus("Click to play again.");
          },delay);
       };
 
@@ -328,11 +337,21 @@ TicTacToeForm.prototype = {
 
    // Resets the game form so it is possible to play another game
    resetGame: function() {
-      this.disableUI(true);
+      this.enablePlayer(false);
       this.showWinningMove(false);
       this.game.reset();
       this.updateUI();
       this.showForm();
+   },
+
+   enablePlayer: function(enable) {
+      if (enable) {
+         this.disableUI(false);
+         this.setStatus("Select a square.");
+      } else {
+         this.disableUI(true);
+         this.clearStatus();
+      }
    },
 
    // Starts the game as player or computer, valid initially and after reset
@@ -344,11 +363,11 @@ TicTacToeForm.prototype = {
          var thisForm = this;
          window.setTimeout(function() {
             thisForm.computerFirstMove();
-            thisForm.disableUI(false);
+            thisForm.enablePlayer(true);
          },thisForm.firstMoveDelay);
       }
       else {
-         this.disableUI(false);
+         this.enablePlayer(true);
       }
    }, 
 
@@ -364,15 +383,17 @@ TicTacToeForm.prototype = {
    makeMove: function(row,col) {
 
       if (this.game.isGameComplete()) {
+         // This shouldn't be possible without a bug.
          alert('Game is over.')
       }
+
       this.markAndUpdate(row,col,PLAYER);
       if (this.game.isGameComplete()) {
          this.showResult();
          return;
       }
 
-      this.disableUI(true);
+      this.enablePlayer(false);
 
       var thisForm = this;
       window.setTimeout(function() {
@@ -381,8 +402,8 @@ TicTacToeForm.prototype = {
          if (thisForm.game.isGameComplete()) {
             thisForm.showResult();
             return;
-        }
-        thisForm.disableUI(false);
+         }
+         thisForm.enablePlayer(true);
       }, thisForm.computerMoveDelay);
    },
 
