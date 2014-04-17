@@ -236,7 +236,8 @@ function TicTacToeForm(elemId) {
    this.heading = "Tic Tac Toe";
    this.size = 3;
    this.playerFirst = true;
-   this.resultDelay = 1500;
+   this.resultDelay = 1000;
+   this.drawResultDelay = 500;
    this.firstMoveDelay = 1000;
    this.computerMoveDelay = 10;
 
@@ -268,21 +269,21 @@ TicTacToeForm.prototype = {
    showResult: function() {
 
       var thisForm = this;
-      var show = function(text) {
+      var show = function(text, delay) {
          window.setTimeout(function() {
             thisForm.resultElem.innerHTML = '<message>' + text + '</message>';
             thisForm.resultElem.style.zIndex = "1";
-         },thisForm.resultDelay);
+         },delay);
       };
 
       if (this.game.getWinner() === PLAYER) {
          this.showWinningMove();
-         show('You Win!');
+         show('You Win!', this.resultDelay);
       } else if (this.game.getWinner() === COMPUTER) {
          this.showWinningMove();
-         show('You Lose.');
+         show('You Lose.', this.resultDelay);
       } else
-         show("A Draw.");
+         show("A Draw.", this.drawResultDelay);
    },
 
    // Called upon game completion, but before result - highlights winning line
@@ -402,7 +403,7 @@ TicTacToeForm.prototype = {
          ".tictactoe form": "{ position: absolute; top: 0px; display: block; text-align: center; }",
          ".tictactoe result ": "{ display: table; position: absolute; top: 0px; z-index: -1; font-size: 150%; opacity: .9; }",
          ".tictactoe result message": "{ display: table-cell; text-align: center; vertical-align: middle; }",
-         ".tictactoe button.tttwinner": "{ background-color: #F2F760; transition: background-color 1s; -webkit-transition: background-color 1s; -o-transition: background-color 1s; -moz-transition: background-color 1s;}",
+         ".tictactoe button.tttwinner": "{ background-color: #F2F760; transition: background-color .5s; -webkit-transition: background-color .5s; -o-transition: background-color .5s; -moz-transition: background-color .5s;}",
          ".tictactoe button:focus": "{ outline: none; }",
          ".tictactoe button": "{ width: 100px; height: 100px; font-size: 72px; vertical-align: top; color: black; background: none; border: none; }",
          ".tictactoe form > button:nth-of-type(3n+1)": "{ border-right: 5px solid black; }",
