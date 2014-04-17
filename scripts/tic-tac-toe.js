@@ -222,7 +222,7 @@ TicTacToe.prototype = {
 /**
  * Constructor for user interface. Turns the specified element into a game UI.
  */
-function TicTacToeForm(elemId) {
+function TicTacToeUI(elemId) {
 
    if (typeof gridSize === "undefined") {
       gridSize = 3;
@@ -247,7 +247,7 @@ function TicTacToeForm(elemId) {
    this.selectPlayer();
 }
 
-TicTacToeForm.prototype = {
+TicTacToeUI.prototype = {
 
    // Construct element id for button of specified row/col
    buttonId: function buttonId(row,col) {
@@ -348,6 +348,7 @@ TicTacToeForm.prototype = {
       this.updateUI();
    },
 
+   // Enables the grid buttons and prompts for a move.
    enablePlayer: function(enable) {
       if (enable) {
          this.disableUI(false);
@@ -416,8 +417,8 @@ TicTacToeForm.prototype = {
 
    // Creates a click handler for specified row/col button (knows coordinates)
    createHandler: function(row,col) {
-      var gameForm = this;
-      return function() { gameForm.makeMove(row,col); return false; }
+      var gameUI = this;
+      return function() { gameUI.makeMove(row,col); return false; }
    },
 
    // Builds and attaches HTML/CSS based UI using DOM
