@@ -228,25 +228,42 @@ function TicTacToeUI(elemId) {
    this.computerMoveDelay = 500;
 
    this.createUI();
-   this.selectPlayer();
+   this.showPlayerSelect();
 }
 
 TicTacToeUI.prototype = {
 
    // Construct element id for button of specified row/col
-   buttonId: function buttonId(row,col) {
+   getButtonId: function getButtonId(row,col) {
       return row + 'x' + col;
    },
 
    // Returns the button for the specified row/col
-   button: function(row,col) {
-      return document.getElementById(this.buttonId(row,col));
+   getButton: function(row,col) {
+      return document.getElementById(this.getButtonId(row,col));
+   },
+
+   // Convenience method for getting the X/ /O labels for game cells
+   getCellValue: function(row,col) {
+      var player = this.game.getCell(row,col);
+      if (typeof player === "object")
+         return player.label;
+      return ' ';
+   },
+
+   // Causes a batch update from game model to UI buttons
+   updateGrid: function() {
+      this.game.forGrid(function(row,col) {
+         var cellValue = this.getCellValue(row,col), button = this.getButton(row,col);
+         button.innerHTML = cellValue;
+         if (cellValue !== ' ') button.disabled = true;
+      },this);
    },
 
    // Marks a cell for a player and updates the UI to match
-   markAndUpdate: function(row,col,player) {
+   markCell: function(row,col,player) {
       this.game.setCell(row,col,player);
-      this.updateUI();
+      this.updateGrid();
    },
 
    // Shows an instructive status message
@@ -260,9 +277,15 @@ TicTacToeUI.prototype = {
    },
 
    // Causes the player selection screen to display
-   selectPlayer: function() {
+   showPlayerSelect: function() {
       this.playerselElem.style.zIndex = "1";
       this.setStatus("Select who moves first.");
+   },
+
+   // Used to hide other panes and show the game grid
+   showGrid: function() {
+      this.resultElem.style.zIndex = '-1';
+      this.playerselElem.style.zIndex = '-1';
    },
 
    // Called upon game completion, shows the game result
@@ -280,17 +303,17 @@ TicTacToeUI.prototype = {
       };
 
       if (this.game.getWinner() === PLAYER) {
-         this.showWinningMove();
+         this.highlightWinningMove();
          show('You Win!', this.resultDelay);
       } else if (this.game.getWinner() === COMPUTER) {
-         this.showWinningMove();
+         this.highlightWinningMove();
          show('You Lose.', this.resultDelay);
       } else
          show("A Draw.", this.drawResultDelay);
    },
 
    // Called upon game completion, but before result - highlights winning line
-   showWinningMove: function(show) {
+   highlightWinningMove: function(show) {
 
       if (typeof show === "undefined") {
          show = true;
@@ -303,42 +326,36 @@ TicTacToeUI.prototype = {
       }
 
       for (var cell=0; cell<winLine.length; cell++) {
-         var winCell = winLine[cell], winButton = this.button(winCell[0],winCell[1]);
+         var winCell = winLine[cell], winButton = this.getButton(winCell[0],winCell[1]);
          winButton.className = show? "tttwinner" : "";
       }
    },
 
-   // Used to hide other panes and show the game grid
-   showGrid: function() {
-      this.resultElem.style.zIndex = '-1';
-      this.playerselElem.style.zIndex = '-1';
-   },
-
    // Disables/enabled tic-tac-toe grid for user input
-   disableUI: function (disabled) {
+   disableGrid: function (disabled) {
       this.game.forGrid(function(row,col) {
-         var button = this.button(row,col);
+         var button = this.getButton(row,col);
          button.disabled = disabled || !this.game.cellAvailable(row,col);
       },this);
    },
 
-   // Resets so it is possible to play another game
-   resetGame: function() {
-      this.enablePlayer(false);
-      this.showWinningMove(false);
-      this.game.reset();
-      this.updateUI();
-   },
-
    // Enables the grid buttons and prompts for a move.
-   enablePlayer: function(enable) {
+   promptPlayerMove: function(enable) {
       if (enable) {
-         this.disableUI(false);
+         this.disableGrid(false);
          this.setStatus("Select a square.");
       } else {
-         this.disableUI(true);
+         this.disableGrid(true);
          this.clearStatus();
       }
+   },
+
+   // Resets so it is possible to play another game
+   resetGame: function() {
+      this.promptPlayerMove(false);
+      this.highlightWinningMove(false);
+      this.game.reset();
+      this.updateGrid();
    },
 
    // Starts the game as player or computer, valid initially and after reset
@@ -352,55 +369,55 @@ TicTacToeUI.prototype = {
          // delay move so the user sees it happen
          var thisUI = this;
          window.setTimeout(function() {
-            thisUI.computerFirstMove();
-            thisUI.enablePlayer(true);
+            thisUI.makeFirstMoveAsComputer();
+            thisUI.promptPlayerMove(true);
          },thisUI.firstMoveDelay);
       }
       else {
-         this.enablePlayer(true);
+         this.promptPlayerMove(true);
       }
    },
 
    // Plays initial move for computer - random move, skips game end test
-   computerFirstMove: function() {
+   makeFirstMoveAsComputer: function() {
       // We don't bother thinking or checking for game over, it's the opener.
       var randRow = parseInt(this.size * Math.random(),10);
       var randCol = parseInt(this.size * Math.random(),10);
-      this.markAndUpdate(randRow,randCol,COMPUTER);
+      this.markCell(randRow,randCol,COMPUTER);
    },
 
    // Performs a player move, then a computer move - ending game when appropriate
-   makeMove: function(row,col) {
+   playRound: function(row,col) {
 
       if (this.game.isGameComplete()) {
          // This shouldn't be possible without a bug.
          alert('Game is over.')
       }
 
-      this.markAndUpdate(row,col,PLAYER);
+      this.markCell(row,col,PLAYER);
       if (this.game.isGameComplete()) {
          this.showResult();
          return;
       }
 
-      this.enablePlayer(false);
+      this.promptPlayerMove(false);
 
       var thisUI = this;
       window.setTimeout(function() {
          var nextMove = thisUI.game.optimalMove(COMPUTER);
-         thisUI.markAndUpdate(nextMove.row,nextMove.col,COMPUTER);
+         thisUI.markCell(nextMove.row,nextMove.col,COMPUTER);
          if (thisUI.game.isGameComplete()) {
             thisUI.showResult();
             return;
          }
-         thisUI.enablePlayer(true);
+         thisUI.promptPlayerMove(true);
       }, thisUI.computerMoveDelay);
    },
 
    // Creates a click handler for specified row/col button (knows coordinates)
    createHandler: function(row,col) {
       var gameUI = this;
-      return function() { gameUI.makeMove(row,col); return false; }
+      return function() { gameUI.playRound(row,col); return false; }
    },
 
    // Builds and attaches HTML/CSS based UI using DOM
@@ -472,7 +489,7 @@ TicTacToeUI.prototype = {
       var gridElem = this.gridElem = document.createElement('grid');
       this.game.forGrid(function(row,col) {
          var buttonElem = document.createElement('button');
-         buttonElem.setAttribute('id', this.buttonId(row,col));
+         buttonElem.setAttribute('id', this.getButtonId(row,col));
          buttonElem.setAttribute('disabled','true');
          buttonElem.onclick = this.createHandler(row,col);
          gridElem.appendChild(buttonElem);
@@ -495,22 +512,5 @@ TicTacToeUI.prototype = {
       // Create and add status section
       var statusElem = this.statusElem = document.createElement('status');
       this.elem.appendChild(statusElem);
-   },
-
-   // Convenience method for getting the X/ /O labels for game cells
-   gridLabel: function(row,col) {
-      var player = this.game.getCell(row,col);
-      if (typeof player === "object")
-         return player.label;
-      return ' ';
-   },
-
-   // Causes a batch update from game model to UI buttons
-   updateUI: function() {
-      this.game.forGrid(function(row,col) {
-         var gridLabel = this.gridLabel(row,col), button = this.button(row,col);
-         button.innerHTML = gridLabel;
-         if (gridLabel !== ' ') button.disabled = true;
-      },this);
    }
 };
