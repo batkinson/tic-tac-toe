@@ -63,7 +63,7 @@ TicTacToe.prototype = {
       this.lines.push(diag2);
    },
 
-   // Makes this object to be reused for another game
+   // Makes this object reusable for another game
    reset: function() {
       this.moves = 0;
       for (var cell=0; cell<this.grid.length; cell++)
@@ -212,11 +212,8 @@ TicTacToe.prototype = {
  */
 function TicTacToeUI(elemId) {
 
-   if (typeof gridSize === "undefined") {
-      gridSize = 3;
-   }
-
-   this.game = new TicTacToe(gridSize);
+   this.size = 3;
+   this.game = new TicTacToe(this.size);
    this.elemId = elemId;
    this.elem = document.getElementById(elemId);
    this.playerselElem;
@@ -224,7 +221,6 @@ function TicTacToeUI(elemId) {
    this.resultElem;
    this.statusElem;
    this.heading = "Tic Tac Toe";
-   this.size = 3;
    this.playerFirst;
    this.resultDelay = 1000;
    this.drawResultDelay = 1000;
@@ -263,6 +259,7 @@ TicTacToeUI.prototype = {
       this.setStatus('');
    },
 
+   // Causes the player selection screen to display
    selectPlayer: function() {
       this.playerselElem.style.zIndex = "1";
       this.setStatus("Select who moves first.");
@@ -372,7 +369,7 @@ TicTacToeUI.prototype = {
       this.markAndUpdate(randRow,randCol,COMPUTER);
    },
 
-   // Plays player move, then a computer move - ending game when appropriate
+   // Performs a player move, then a computer move - ending game when appropriate
    makeMove: function(row,col) {
 
       if (this.game.isGameComplete()) {
