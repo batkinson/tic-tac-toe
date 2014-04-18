@@ -14,8 +14,7 @@ Player.prototype = {
 
 
 // Players
-var PLAYER = new Player('X');
-var COMPUTER = new Player('O');
+var PLAYER = new Player('X'), COMPUTER = new Player('O');
 
 
 /**
@@ -45,8 +44,7 @@ TicTacToe.prototype = {
 
       // Build index of horizontal and vertical win lines
       for (var i=0; i<this.size; i++) {
-         var row = new Array(this.size);
-         var col = new Array(this.size);
+         var row = new Array(this.size), col = new Array(this.size);
          for (var j=0; j<this.size; j++) {
             row[j] = [i,j];
             col[j] = [j,i];
@@ -56,8 +54,7 @@ TicTacToe.prototype = {
       }
 
       // Add diagonal win lines to the index
-      var diag1 = new Array(this.size);
-      var diag2 = new Array(this.size);
+      var diag1 = new Array(this.size), diag2 = new Array(this.size);
       for (var i=0; i<this.size; i++) {
          diag1[i] = [i,i];
          diag2[i] = [this.size-(i+1),i];
@@ -114,11 +111,9 @@ TicTacToe.prototype = {
 
       linescan:
       for (var l=0; l<this.lines.length; l++) {
-         var line = this.lines[l];
-         var winner = undefined;
+         var line = this.lines[l], winner = undefined;
          for (var c=0; c<this.size; c++) {
-            var cell = line[c];
-            var cellVal = this.getCell(cell[0],cell[1]);
+            var cell = line[c], cellVal = this.getCell(cell[0],cell[1]);
             if (typeof cellVal === "undefined") {
                continue linescan;
             } else if (typeof winner === "undefined") {
@@ -166,8 +161,7 @@ TicTacToe.prototype = {
 
       if (typeof depth === "undefined") depth = 0;
 
-      var maximizing = player === COMPUTER;
-      var minimizing = !maximizing;
+      var maximizing = player === COMPUTER, minimizing = !maximizing;
 
       var opponent = player === PLAYER? COMPUTER : PLAYER;
 
@@ -185,8 +179,7 @@ TicTacToe.prototype = {
                   move = { score: followingMove.score, row: row, col: col };
                }
 
-               var noAlpha = typeof alpha === "undefined";
-               var noBeta = typeof beta === "undefined";
+               var noAlpha = typeof alpha === "undefined", noBeta = typeof beta === "undefined";
 
                if (maximizing && (noAlpha || move.score > alpha.score)) {
                   alpha = move;
@@ -313,8 +306,7 @@ TicTacToeUI.prototype = {
       }
 
       for (var cell=0; cell<winLine.length; cell++) {
-         var winCell = winLine[cell];
-         var winButton = this.button(winCell[0],winCell[1]);
+         var winCell = winLine[cell], winButton = this.button(winCell[0],winCell[1]);
          winButton.className = show? "tttwinner" : "";
       }
    },
@@ -519,8 +511,7 @@ TicTacToeUI.prototype = {
    // Causes a batch update from game model to UI buttons
    updateUI: function() {
       this.game.forGrid(function(row,col) {
-         var gridLabel = this.gridLabel(row,col);
-         var button = this.button(row,col);
+         var gridLabel = this.gridLabel(row,col), button = this.button(row,col);
          button.innerHTML = gridLabel;
          if (gridLabel !== ' ') button.disabled = true;
       },this);
