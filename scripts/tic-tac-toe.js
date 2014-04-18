@@ -65,7 +65,7 @@ TicTacToe.prototype = {
       this.lines.push(diag1);
       this.lines.push(diag2);
    },
-
+   
    // Makes this object to be reused for another game
    reset: function() {
       this.moves = 0;
@@ -89,6 +89,14 @@ TicTacToe.prototype = {
    // Convenience method for whether a cell can be played
    cellAvailable: function(row,col) {
       return typeof this.getCell(row,col) === "undefined";
+   },
+   
+   // Convenience method for working with cell grid
+   forGrid: function(gridfn,thisObj) {
+      if (typeof thisObj === "undefined") thisObj = this;
+      for (var row=0; row<this.size; row++)
+         for (var col=0; col<this.size; col++)
+            gridfn.call(thisObj,row,col);
    },
 
    // Returns the coordinates for the cells that won the game
@@ -165,55 +173,44 @@ TicTacToe.prototype = {
 
       var opponent = player === PLAYER? COMPUTER : PLAYER;
 
-      if (this.isGameComplete()) {
-         return this.scoreGrid(depth);
-      }
+      if (this.isGameComplete()) return this.scoreGrid(depth);
 
-      movescan:
       for (var row=0; row<this.size; row++) {
          for (var col=0; col<this.size; col++) {
-
             if (this.cellAvailable(row,col)) {
 
                var followingMove = this.speculate(row,col,player).optimalMove(opponent,depth+1,alpha,beta);
 
-               if (typeof followingMove === 'number')
+               if (typeof followingMove === 'number') {
                   move = { score: followingMove, row: row, col: col };
-               else
+               } else {
                   move = { score: followingMove.score, row: row, col: col };
-
-               var alphaExists = typeof alpha !== "undefined";
-               var betaExists = typeof beta !== "undefined";
-
-               if (maximizing && (!alphaExists || move.score > alpha.score)) {
-                  alpha = move;
-                  if (betaExists && beta.score <= alpha.score)
-                     break movescan;
                }
-               else if (minimizing && (!betaExists || move.score < beta.score)) {
+
+               var noAlpha = typeof alpha === "undefined";
+               var noBeta = typeof beta === "undefined";
+
+               if (maximizing && (noAlpha || move.score > alpha.score)) {
+                  alpha = move;
+                  if (!noBeta && beta.score <= alpha.score) return alpha;
+               }
+               else if (minimizing && (noBeta || move.score < beta.score)) {
                   beta = move;
-                  if (alphaExists && beta.score <= alpha.score)
-                     break movescan;
+                  if (!noAlpha && beta.score <= alpha.score) return beta;
                }
             }
-
          }
       }
 
-      if (maximizing)
-         return alpha;
-      else
-         return beta;
+      if (maximizing) return alpha; else return beta;
    },
 
    // Converts game state into acceptable hash key
    toString: function() {
       var gridStr = '';
-      for (var row = 0; row<this.size; row++) {
-         for (var col = 0; col<this.size; col++) {
-            gridStr += (this.cellAvailable(row,col)? " " : this.getCell(row,col));
-         }
-      }
+      this.forGrid(function(row,col) {
+         gridStr += (this.cellAvailable(row,col)? " " : this.getCell(row,col));
+      });
       return gridStr;
    }
 };
@@ -332,12 +329,10 @@ TicTacToeUI.prototype = {
 
    // Disables/enabled tic-tac-toe grid for user input
    disableUI: function (disabled) {
-      for (var row=0; row<this.game.size; row++) {
-         for (var col=0; col<this.game.size; col++) {
-            var button = this.button(row,col);
-            button.disabled = disabled || !this.game.cellAvailable(row,col);
-         }
-      }
+      this.game.forGrid(function(row,col) {
+         var button = this.button(row,col);
+         button.disabled = disabled || !this.game.cellAvailable(row,col);
+      },this);
    },
 
    // Resets so it is possible to play another game
@@ -485,17 +480,14 @@ TicTacToeUI.prototype = {
       gameElem.appendChild(playerselElem);
 
       var gridElem = this.gridElem = document.createElement('grid');
-      var size = this.size;
-      for (var row=0; row<size; row++) {
-         for (var col=0; col<size; col++) {
-            var buttonElem = document.createElement('button');
-            buttonElem.setAttribute('id', this.buttonId(row,col));
-            buttonElem.setAttribute('disabled','true');
-            buttonElem.onclick = this.createHandler(row,col);
-            gridElem.appendChild(buttonElem);
-         }
-         gridElem.appendChild(document.createElement('br'));
-      }
+      this.game.forGrid(function(row,col) {
+         var buttonElem = document.createElement('button');
+         buttonElem.setAttribute('id', this.buttonId(row,col));
+         buttonElem.setAttribute('disabled','true');
+         buttonElem.onclick = this.createHandler(row,col);
+         gridElem.appendChild(buttonElem);
+         if (col == this.size-1) gridElem.appendChild(document.createElement('br'));
+      },this);
       gameElem.appendChild(gridElem);
 
       var resultElem = this.resultElem = document.createElement('result');
@@ -524,16 +516,11 @@ TicTacToeUI.prototype = {
 
    // Causes a batch update from game model to UI buttons
    updateUI: function() {
-      var size = this.game.size;
-      for (var row=0; row<size; row++) {
-         for (var col=0; col<size; col++) {
-            var gridLabel = this.gridLabel(row,col);
-            var button = this.button(row,col);
-            button.innerHTML = gridLabel;
-            if (gridLabel !== ' ')  {
-               button.disabled = true;
-            }
-         }
-      }
+      this.game.forGrid(function(row,col) {
+         var gridLabel = this.gridLabel(row,col);
+         var button = this.button(row,col);
+         button.innerHTML = gridLabel;
+         if (gridLabel !== ' ') button.disabled = true;
+      },this);
    }
 };
