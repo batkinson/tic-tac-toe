@@ -84,7 +84,7 @@ TicTacToe.prototype = {
    },
 
    // Convenience method for whether a cell can be played
-   cellAvailable: function(row,col) {
+   isCellAvailable: function(row,col) {
       return typeof this.getCell(row,col) === "undefined";
    },
 
@@ -129,7 +129,7 @@ TicTacToe.prototype = {
    },
 
    // Returns whether is completed, either someone won or moves were exhausted
-   isGameComplete: function() {
+   isGameOver: function() {
       if (this.moves >= this.moveMax) {
          return true;
       }
@@ -157,7 +157,7 @@ TicTacToe.prototype = {
 
    // Returns optimal next move for the specified player for this game state
    // This is a variant of minimax with alpha-beta pruning for better speed
-   optimalMove: function(player,depth,alpha,beta) {
+   getOptimalMove: function(player,depth,alpha,beta) {
 
       if (typeof depth === "undefined") depth = 0;
 
@@ -165,13 +165,13 @@ TicTacToe.prototype = {
 
       var opponent = player === PLAYER? COMPUTER : PLAYER;
 
-      if (this.isGameComplete()) return this.scoreGrid(depth);
+      if (this.isGameOver()) return this.scoreGrid(depth);
 
       for (var row=0; row<this.size; row++) {
          for (var col=0; col<this.size; col++) {
-            if (this.cellAvailable(row,col)) {
+            if (this.isCellAvailable(row,col)) {
 
-               var followingMove = this.speculate(row,col,player).optimalMove(opponent,depth+1,alpha,beta);
+               var followingMove = this.speculate(row,col,player).getOptimalMove(opponent,depth+1,alpha,beta);
 
                if (typeof followingMove === 'number') {
                   move = { score: followingMove, row: row, col: col };
@@ -200,7 +200,7 @@ TicTacToe.prototype = {
    toString: function() {
       var gridStr = '';
       this.forGrid(function(row,col) {
-         gridStr += (this.cellAvailable(row,col)? " " : this.getCell(row,col));
+         gridStr += (this.isCellAvailable(row,col)? " " : this.getCell(row,col));
       });
       return gridStr;
    }
@@ -335,7 +335,7 @@ TicTacToeUI.prototype = {
    disableGrid: function (disabled) {
       this.game.forGrid(function(row,col) {
          var button = this.getButton(row,col);
-         button.disabled = disabled || !this.game.cellAvailable(row,col);
+         button.disabled = disabled || !this.game.isCellAvailable(row,col);
       },this);
    },
 
@@ -389,13 +389,13 @@ TicTacToeUI.prototype = {
    // Performs a player move, then a computer move - ending game when appropriate
    playRound: function(row,col) {
 
-      if (this.game.isGameComplete()) {
+      if (this.game.isGameOver()) {
          // This shouldn't be possible without a bug.
          alert('Game is over.')
       }
 
       this.markCell(row,col,PLAYER);
-      if (this.game.isGameComplete()) {
+      if (this.game.isGameOver()) {
          this.showResult();
          return;
       }
@@ -404,9 +404,9 @@ TicTacToeUI.prototype = {
 
       var thisUI = this;
       window.setTimeout(function() {
-         var nextMove = thisUI.game.optimalMove(COMPUTER);
+         var nextMove = thisUI.game.getOptimalMove(COMPUTER);
          thisUI.markCell(nextMove.row,nextMove.col,COMPUTER);
-         if (thisUI.game.isGameComplete()) {
+         if (thisUI.game.isGameOver()) {
             thisUI.showResult();
             return;
          }
