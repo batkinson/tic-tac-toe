@@ -65,7 +65,7 @@ TicTacToe.prototype = {
       this.lines.push(diag1);
       this.lines.push(diag2);
    },
-   
+
    // Makes this object to be reused for another game
    reset: function() {
       this.moves = 0;
@@ -90,7 +90,7 @@ TicTacToe.prototype = {
    cellAvailable: function(row,col) {
       return typeof this.getCell(row,col) === "undefined";
    },
-   
+
    // Convenience method for working with cell grid
    forGrid: function(gridfn,thisObj) {
       if (typeof thisObj === "undefined") thisObj = this;
@@ -164,9 +164,7 @@ TicTacToe.prototype = {
    // This is a variant of minimax with alpha-beta pruning for better speed
    optimalMove: function(player,depth,alpha,beta) {
 
-      if (typeof depth === "undefined") {
-         depth = 0;
-      }
+      if (typeof depth === "undefined") depth = 0;
 
       var maximizing = player === COMPUTER;
       var minimizing = !maximizing;
@@ -421,9 +419,11 @@ TicTacToeUI.prototype = {
 
       var thisUI = this; // For click handling closures
 
+      // Add a new style element to document
       var newStyle = document.createElement('style');
       document.getElementsByTagName('head')[0].appendChild(newStyle);
 
+      // Get the stylesheet we just created
       var sheet = document.styleSheets[document.styleSheets.length - 1];
 
       var rules = {
@@ -449,7 +449,7 @@ TicTacToeUI.prototype = {
          ".tictactoe grid > button:nth-last-of-type(-n+3)": "{ border-top: 5px solid black; }"
       };
 
-
+      // Adds style rules in browser-specific way
       for (selector in rules) {
          if (sheet.insertRule)
             sheet.insertRule(selector + rules[selector], sheet.cssRules.length);
@@ -457,12 +457,13 @@ TicTacToeUI.prototype = {
             sheet.addRule(selector, rules[selector]);
       }
 
+      // Create and add heading section
       var headingElem = document.createElement('heading');
       headingElem.appendChild(document.createTextNode(this.heading));
       this.elem.appendChild(headingElem);
 
+      // Create and add game section
       var gameElem = document.createElement('game');
-
       var playerselElem = this.playerselElem = document.createElement('playersel');
       var choiceElem = document.createElement('choice');
       var selMsgElem = document.createElement('message');
@@ -498,10 +499,11 @@ TicTacToeUI.prototype = {
       };
       gameElem.appendChild(resultElem);
 
-
+      // Bless root element with tictactoe class and add game section
       this.elem.className += " tictactoe";
       this.elem.appendChild(gameElem);
 
+      // Create and add status section
       var statusElem = this.statusElem = document.createElement('status');
       this.elem.appendChild(statusElem);
    },
