@@ -155,6 +155,15 @@ TicTacToe.prototype = {
       return specState;
    },
 
+   // Returns a randomly generated move.
+   getRandomMove: function() {
+      return { 
+         score: 0, 
+         row: parseInt(Math.random()*this.size),
+         col: parseInt(Math.random()*this.size) 
+      };
+   },
+
    // Returns optimal next move for the specified player for this game state
    // This is a variant of minimax with alpha-beta pruning for better speed
    getOptimalMove: function(player,depth,alpha,beta) {
@@ -381,9 +390,8 @@ TicTacToeUI.prototype = {
    // Plays initial move for computer - random move, skips game end test
    makeFirstMoveAsComputer: function() {
       // We don't bother thinking or checking for game over, it's the opener.
-      var randRow = parseInt(this.size * Math.random(),10);
-      var randCol = parseInt(this.size * Math.random(),10);
-      this.markCell(randRow,randCol,COMPUTER);
+      var randomMove = this.game.getRandomMove();
+      this.markCell(randomMove.row,randomMove.col,COMPUTER);
    },
 
    // Performs a player move, then a computer move - ending game when appropriate
