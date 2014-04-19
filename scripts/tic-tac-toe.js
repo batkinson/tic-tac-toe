@@ -22,6 +22,7 @@ var PLAYER = new Player('X'), COMPUTER = new Player('O');
  */
 function TicTacToe(size,lastState) {
    this.size = size;
+   this.difficultyLevels = { Easy: this.getRandomMove, Normal: this.getHeuristicMove, Hard: this.getOptimalMove };
    this.nextMove = this.getOptimalMove;
    if (typeof lastState !== "undefined") {
       // shallow copy for move speculation (state space search)
@@ -254,6 +255,10 @@ TicTacToe.prototype = {
       if (maximizing) return alpha; else return beta;
    },
 
+   setDifficulty: function(level) {
+      this.nextMove = this.difficultyLevels[level];
+   },
+
    // Converts game state into acceptable hash key
    toString: function() {
       var gridStr = '';
@@ -274,6 +279,7 @@ function TicTacToeUI(elemId) {
    this.game = new TicTacToe(this.size);
    this.elemId = elemId;
    this.elem = document.getElementById(elemId);
+   this.difficultyElem;
    this.playerselElem;
    this.gridElem;
    this.resultElem;
@@ -286,7 +292,7 @@ function TicTacToeUI(elemId) {
    this.computerMoveDelay = 500;
 
    this.createUI();
-   this.showPlayerSelect();
+   this.showDifficultySelect();
 }
 
 TicTacToeUI.prototype = {
@@ -334,9 +340,16 @@ TicTacToeUI.prototype = {
       this.setStatus('');
    },
 
+   // Causes the difficulty selection screen to display
+   showDifficultySelect: function() {
+      this.difficultyElem.style.zIndex = "1";
+      this.setStatus("Select opponent difficulty level.");
+   },
+
    // Causes the player selection screen to display
    showPlayerSelect: function() {
       this.playerselElem.style.zIndex = "1";
+      this.difficultyElem.style.zIndex = "-1";
       this.setStatus("Select who moves first.");
    },
 
@@ -344,6 +357,7 @@ TicTacToeUI.prototype = {
    showGrid: function() {
       this.resultElem.style.zIndex = '-1';
       this.playerselElem.style.zIndex = '-1';
+      this.difficultyElem.style.zIndex = '-1';
    },
 
    // Called upon game completion, shows the game result
@@ -472,9 +486,21 @@ TicTacToeUI.prototype = {
    },
 
    // Creates a click handler for specified row/col button (knows coordinates)
-   createHandler: function(row,col) {
+   createGridHandler: function(row,col) {
       var gameUI = this;
       return function() { gameUI.playRound(row,col); return false; }
+   },
+
+   // Creates a click handler for specified difficulty level
+   createDifficultyHandler: function(level) {
+      var gameUI = this, game = this.game;
+      return function() { game.setDifficulty(level); gameUI.showPlayerSelect(); };
+   },
+
+   // Creates a click handler for player select
+   createPlayerHandler: function(playerFirst) {
+      var gameUI = this;
+      return function() { gameUI.playerFirst=playerFirst; gameUI.startGame(); };
    },
 
    // Builds and attaches HTML/CSS based UI using DOM
@@ -496,10 +522,12 @@ TicTacToeUI.prototype = {
          ".tictactoe status": "{ line-height: 84px; font-size: 75%; }",
          ".tictactoe game": "{ display: block; position: relative; width: 320px; height: 300px; }",
          ".tictactoe game > *": "{ background-color: white; width: 320px; height: 300px; }",
-         ".tictactoe playersel": "{ position: absolute; display: table; top: 0px; z-index: 1 }",
-         ".tictactoe playersel choice": "{ display: table-cell; text-align: center; vertical-align: middle; }",
-         ".tictactoe playersel choice message": "{ display: block; font-size: 150%; line-height: 85px; }",
-         ".tictactoe .fa": "{ display: inline-block; font-size: 100px; width: 160px; }",
+         ".tictactoe playersel, .tictactoe difficultysel": "{ position: absolute; display: table; top: 0px; }",
+         ".tictactoe difficultysel": "{ z-index: 1; }",
+         ".tictactoe level": "{ display: block; line-height: 140%; font-size: 130%; }",
+         ".tictactoe choice": "{ display: table-cell; text-align: center; vertical-align: middle; }",
+         ".tictactoe choice message": "{ display: block; font-size: 150%; line-height: 85px; }",
+         ".tictactoe playersel .fa": "{ display: inline-block; font-size: 100px; width: 160px; }",
          ".tictactoe grid": "{ position: absolute; top: 0px; display: block; text-align: center; }",
          ".tictactoe result ": "{ display: table; position: absolute; top: 0px; z-index: -1; font-size: 150%; opacity: .9; }",
          ".tictactoe result message": "{ display: table-cell; text-align: center; vertical-align: middle; }",
@@ -527,20 +555,35 @@ TicTacToeUI.prototype = {
 
       // Create and add game section
       var gameElem = document.createElement('game');
+
+      var difficultyElem = this.difficultyElem = document.createElement('difficultysel');
+      var choiceElem1 = document.createElement('choice');
+      var diffMsgElem = document.createElement('message');
+      diffMsgElem.appendChild(document.createTextNode('Difficulty?'));
+      choiceElem1.appendChild(diffMsgElem);
+      for (var level in this.game.difficultyLevels) {
+         var levelElem = document.createElement('level');
+         levelElem.appendChild(document.createTextNode(level));
+         levelElem.onclick = this.createDifficultyHandler(level);
+         choiceElem1.appendChild(levelElem);
+      }
+      difficultyElem.appendChild(choiceElem1);
+      gameElem.appendChild(difficultyElem);
+
       var playerselElem = this.playerselElem = document.createElement('playersel');
-      var choiceElem = document.createElement('choice');
+      var choiceElem2 = document.createElement('choice');
       var selMsgElem = document.createElement('message');
       selMsgElem.appendChild(document.createTextNode('Who starts?'));
-      choiceElem.appendChild(selMsgElem);
+      choiceElem2.appendChild(selMsgElem);
       var playerElem = document.createElement('i');
-      playerElem.onclick = function() { thisUI.playerFirst=true; thisUI.startGame(); };
+      playerElem.onclick = this.createPlayerHandler(true);
       playerElem.className = "fa fa-user";
       var computerElem = document.createElement('i');
-      computerElem.onclick = function() { thisUI.playerFirst=false; thisUI.startGame(); };
+      computerElem.onclick = this.createPlayerHandler(false);
       computerElem.className = "fa fa-laptop";
-      choiceElem.appendChild(playerElem);
-      choiceElem.appendChild(computerElem);
-      playerselElem.appendChild(choiceElem);
+      choiceElem2.appendChild(playerElem);
+      choiceElem2.appendChild(computerElem);
+      playerselElem.appendChild(choiceElem2);
       gameElem.appendChild(playerselElem);
 
       var gridElem = this.gridElem = document.createElement('grid');
@@ -548,7 +591,7 @@ TicTacToeUI.prototype = {
          var buttonElem = document.createElement('button');
          buttonElem.setAttribute('id', this.getButtonId(row,col));
          buttonElem.setAttribute('disabled','true');
-         buttonElem.onclick = this.createHandler(row,col);
+         buttonElem.onclick = this.createGridHandler(row,col);
          gridElem.appendChild(buttonElem);
          if (col == this.size-1) gridElem.appendChild(document.createElement('br'));
       },this);
