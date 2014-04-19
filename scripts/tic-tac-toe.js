@@ -22,6 +22,7 @@ var PLAYER = new Player('X'), COMPUTER = new Player('O');
  */
 function TicTacToe(size,lastState) {
    this.size = size;
+   this.nextMove = this.getOptimalMove;
    if (typeof lastState !== "undefined") {
       // shallow copy for move speculation (state space search)
       this.moveMax = lastState.moveMax;
@@ -101,6 +102,11 @@ TicTacToe.prototype = {
       return this.lines[this.winningLine];
    },
 
+   // Returns the opponent to the specified player
+   getOpponent: function(player) {
+      return player === PLAYER? COMPUTER : PLAYER;
+   },
+
    // Returns the player that won the game
    getWinner: function() {
 
@@ -140,7 +146,59 @@ TicTacToe.prototype = {
       return false;
    },
 
-   // Returns the hueristic score for this game state for the given search depth
+   // Returns a randomly generated move.
+   getRandomMove: function() {
+      var row, col;
+      do {
+         row = parseInt(Math.random()*this.size);
+         col = parseInt(Math.random()*this.size);
+      } while(!this.isCellAvailable(row,col));
+      return { row: row, col: col };
+   },
+
+   // Returns a hueristic-based move for the specified player
+   getHeuristicMove: function(player) {
+
+      var movesByMarkCount = { };
+      movesByMarkCount[PLAYER] = [];
+      movesByMarkCount[COMPUTER] = [];
+
+      // Capture a move for each player, for each mark count (if one exists)
+      for (var linei=0; linei<this.lines.length; linei++) {
+         var line = this.lines[linei], count = { }, availableCell = undefined;
+         count[PLAYER] = 0;
+         count[COMPUTER] = 0;
+         for (var celli=0; celli<line.length; celli++) {
+            var cell = line[celli], row = cell[0], col = cell[1];
+            if (this.isCellAvailable(row,col)) {
+               availableCell = cell;
+            } else {
+               var mark = this.getCell(row,col);
+               count[mark]++;
+            }
+         }
+
+         // Skip lines with no available move
+         if (typeof availableCell === "undefined") continue;
+
+         for (player in count) {
+            movesByMarkCount[player][count[player]] = { row: availableCell[0], col: availableCell[1] };
+         }
+      }
+
+      var move, opponent = this.getOpponent(player);
+
+      // Pick move in line with highest mark count, priority to win over block
+      for (var len=this.size-1; len>=0; len--) {
+         if (len in movesByMarkCount[player]) {
+            return movesByMarkCount[player][len];
+         } else if (len in movesByMarkCount[opponent]) {
+            return movesByMarkCount[opponent][len];
+         }
+      }
+   },
+
+   // Returns a hueristic score for this game state for the given search depth
    scoreGrid: function(depth) {
       var winner = this.getWinner();
       if (typeof winner === "undefined") return 0;
@@ -155,15 +213,6 @@ TicTacToe.prototype = {
       return specState;
    },
 
-   // Returns a randomly generated move.
-   getRandomMove: function() {
-      return { 
-         score: 0, 
-         row: parseInt(Math.random()*this.size),
-         col: parseInt(Math.random()*this.size) 
-      };
-   },
-
    // Returns optimal next move for the specified player for this game state
    // This is a variant of minimax with alpha-beta pruning for better speed
    getOptimalMove: function(player,depth,alpha,beta) {
@@ -172,7 +221,7 @@ TicTacToe.prototype = {
 
       var maximizing = player === COMPUTER, minimizing = !maximizing;
 
-      var opponent = player === PLAYER? COMPUTER : PLAYER;
+      var opponent = this.getOpponent(player);
 
       if (this.isGameOver()) return this.scoreGrid(depth);
 
@@ -412,7 +461,7 @@ TicTacToeUI.prototype = {
 
       var thisUI = this;
       window.setTimeout(function() {
-         var nextMove = thisUI.game.getOptimalMove(COMPUTER);
+         var nextMove = thisUI.game.nextMove(COMPUTER);
          thisUI.markCell(nextMove.row,nextMove.col,COMPUTER);
          if (thisUI.game.isGameOver()) {
             thisUI.showResult();
