@@ -488,7 +488,7 @@ TicTacToeUI.prototype = {
    // Creates a click handler for specified row/col button (knows coordinates)
    createGridHandler: function(row,col) {
       var gameUI = this;
-      return function() { gameUI.playRound(row,col); return false; }
+      return function() { gameUI.playRound(row,col); }
    },
 
    // Creates a click handler for specified difficulty level
