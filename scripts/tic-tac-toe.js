@@ -271,6 +271,37 @@ TicTacToe.prototype = {
 
 
 /**
+ * Constructor for object that manages screen visibility.
+ */
+function ScreenManager(background) {
+
+   this.background = background;
+   this.others = new Array();
+   for (var i=1; i<arguments.length; i++) {
+      this.others.push(arguments[i]);
+   }
+}
+
+ScreenManager.prototype = {
+
+   showDefault: function() {
+      this.background.style.zIndex = 0;
+      for (var i=0; i<this.others.length; i++) {
+         this.others[i].style.zIndex = -1;
+      }
+   },
+
+   show: function(element) {
+      element.style.zIndex = element === this.background? 0 : 1;
+      for (var i=0; i<this.others.length; i++) {
+         var overscreen = this.others[i];
+         if (overscreen !== element) overscreen.style.zIndex = -1;
+      }
+   }
+};
+
+
+/**
  * Constructor for user interface. Turns the specified element into a game UI.
  */
 function TicTacToeUI(elemId) {
@@ -283,6 +314,7 @@ function TicTacToeUI(elemId) {
    this.playerselElem;
    this.gridElem;
    this.resultElem;
+   this.screenManager;
    this.statusElem;
    this.heading = "Tic Tac Toe";
    this.playerFirst;
@@ -342,22 +374,19 @@ TicTacToeUI.prototype = {
 
    // Causes the difficulty selection screen to display
    showDifficultySelect: function() {
-      this.difficultyElem.style.zIndex = "1";
+      this.screenManager.show(this.difficultyElem);
       this.setStatus("Select opponent difficulty level.");
    },
 
    // Causes the player selection screen to display
    showPlayerSelect: function() {
-      this.playerselElem.style.zIndex = "1";
-      this.difficultyElem.style.zIndex = "-1";
+      this.screenManager.show(this.playerselElem);
       this.setStatus("Select who moves first.");
    },
 
-   // Used to hide other panes and show the game grid
    showGrid: function() {
-      this.resultElem.style.zIndex = '-1';
-      this.playerselElem.style.zIndex = '-1';
-      this.difficultyElem.style.zIndex = '-1';
+      this.clearStatus();
+      this.screenManager.show(this.gridElem);
    },
 
    // Called upon game completion, shows the game result
@@ -435,7 +464,6 @@ TicTacToeUI.prototype = {
       var playerFirst = this.playerFirst;
       PLAYER.label = playerFirst? 'X' : 'O';
       COMPUTER.label = playerFirst? 'O' : 'X';
-      this.clearStatus();
       this.showGrid();
       if (!playerFirst) {
          // delay move so the user sees it happen
@@ -612,5 +640,8 @@ TicTacToeUI.prototype = {
       // Create and add status section
       var statusElem = this.statusElem = document.createElement('status');
       this.elem.appendChild(statusElem);
+
+      // Create a screen manager so we can easily manage screen visibility
+      this.screenManager = new ScreenManager(this.gridElem,this.playerselElem,this.resultElem,this.difficultyElem);
    }
 };
