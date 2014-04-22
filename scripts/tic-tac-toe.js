@@ -568,14 +568,15 @@ TicTacToeUI.prototype = {
          ".tictactoe playersel .fa": "{ display: inline-block; font-size: 100px; width: 160px; }",
          ".tictactoe grid": "{ position: absolute; top: 0px; display: block; text-align: center; }",
          ".tictactoe result ": "{ display: table; position: absolute; top: 0px; z-index: -1; font-size: 150%; opacity: .9; }",
-         ".tictactoe result message": "{ display: table-cell; text-align: center; vertical-align: middle; }",
+         ".tictactoe result message": "{ display: table-cell; text-align: center; vertical-align: middle; cursor: inherit; }",
          ".tictactoe button.tttwinner": "{ background-color: #F2F760; transition: background-color .5s; -webkit-transition: background-color .5s; -o-transition: background-color .5s; -moz-transition: background-color .5s;}",
          ".tictactoe button:focus": "{ outline: none; }",
          ".tictactoe button": "{ width: 100px; height: 100px; font-size: 72px; vertical-align: top; color: black; background: none; border: none; }",
          ".tictactoe grid > button:nth-of-type(3n+1)": "{ border-right: 5px solid black; }",
          ".tictactoe grid > button:nth-of-type(3n+3)": "{ border-left: 5px solid black; }",
          ".tictactoe grid > button:nth-of-type(-n+3)": "{ border-bottom: 5px solid black; }",
-         ".tictactoe grid > button:nth-last-of-type(-n+3)": "{ border-top: 5px solid black; }"
+         ".tictactoe grid > button:nth-last-of-type(-n+3)": "{ border-top: 5px solid black; }",
+         ".tictactoe level, .tictactoe choice .fa, .tictactoe result, .tictactoe button": "{ cursor: pointer; }",
       };
 
       // Adds style rules in browser-specific way
