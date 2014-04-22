@@ -531,6 +531,16 @@ TicTacToeUI.prototype = {
       return function() { gameUI.playerFirst=playerFirst; gameUI.startGame(); };
    },
 
+   // Creates a click handler for results screen
+   createResultHandler: function() {
+      var gameUI = this;
+      return function() {
+         gameUI.resetGame();
+         gameUI.playerFirst = !gameUI.playerFirst;
+         gameUI.startGame(gameUI.playerFirst);
+      };
+   },
+
    // Builds and attaches HTML/CSS based UI using DOM
    createUI: function() {
 
@@ -626,11 +636,7 @@ TicTacToeUI.prototype = {
       gameElem.appendChild(gridElem);
 
       var resultElem = this.resultElem = document.createElement('result');
-      resultElem.onclick = function() {
-         thisUI.resetGame();
-         thisUI.playerFirst = !thisUI.playerFirst;
-         thisUI.startGame(thisUI.playerFirst);
-      };
+      resultElem.onclick = this.createResultHandler();
       gameElem.appendChild(resultElem);
 
       // Bless root element with tictactoe class and add game section
