@@ -157,7 +157,7 @@ TicTacToe.prototype = {
       return { row: row, col: col };
    },
 
-   // Returns a hueristic-based move for the specified player
+   // Returns a heuristic-based move for the specified player
    getHeuristicMove: function(player) {
 
       var movesByMarkCount = { };
@@ -199,12 +199,13 @@ TicTacToe.prototype = {
       }
    },
 
-   // Returns a hueristic score for this game state for the given search depth
+   // Returns a heuristic score for this game state for the given search depth
    scoreGrid: function(depth) {
       var winner = this.getWinner();
+      var winReward = this.moveMax + 1;
       if (typeof winner === "undefined") return 0;
-      if (winner === PLAYER) return depth-10; // non-positive
-      if (winner === COMPUTER) return 10-depth; // non-negative
+      if (winner === PLAYER) return depth-winReward; // non-positive
+      if (winner === COMPUTER) return winReward-depth; // non-negative
    },
 
    // Returns a game state based on this one, with the specified move played
