@@ -355,9 +355,9 @@ ScreenManager.prototype = {
 /**
  * Constructor for user interface. Turns the specified element into a game UI.
  */
-function TicTacToeUI(elemId) {
+function TicTacToeUI(elemId,size) {
 
-   this.size = 3;
+   this.size = typeof size !== 'undefined'? size : 3;
    this.game = new TicTacToe(this.size);
    this.elemId = elemId;
    this.elem = document.getElementById(elemId);
@@ -604,13 +604,17 @@ TicTacToeUI.prototype = {
       // Get the stylesheet we just created
       var sheet = document.styleSheets[document.styleSheets.length - 1];
 
+      var buttonSize = 100;
+      var gridWidth = this.size * buttonSize;
+      var paddedWidth = gridWidth + 20;
+
       var rules = {
          ".tictactoe": "{ font-family: 'Rokkitt', serif; font-size: 200%; color: black; }",
          ".tictactoe heading, .tictactoe status": "{ display: block; text-align: center; }",
          ".tictactoe heading": "{ line-height: 96px; }",
          ".tictactoe status": "{ line-height: 84px; font-size: 75%; }",
-         ".tictactoe game": "{ display: block; position: relative; width: 320px; height: 300px; }",
-         ".tictactoe game > *": "{ background-color: white; width: 320px; height: 300px; }",
+         ".tictactoe game": "{ display: block; position: relative; width: " + paddedWidth +"px; height: " + gridWidth + "px; }",
+         ".tictactoe game > *": "{ background-color: white; width: " + paddedWidth + "px; height: " + gridWidth + "px; }",
          ".tictactoe playersel, .tictactoe difficultysel": "{ position: absolute; display: table; top: 0px; }",
          ".tictactoe difficultysel": "{ z-index: 1; }",
          ".tictactoe level": "{ display: block; line-height: 140%; font-size: 130%; }",
@@ -623,12 +627,19 @@ TicTacToeUI.prototype = {
          ".tictactoe button.tttwinner": "{ background-color: #F2F760; transition: background-color .5s; -webkit-transition: background-color .5s; -o-transition: background-color .5s; -moz-transition: background-color .5s;}",
          ".tictactoe button:focus": "{ outline: none; }",
          ".tictactoe button": "{ width: 100px; height: 100px; font-size: 72px; vertical-align: top; color: black; background: none; border: none; }",
-         ".tictactoe grid > button:nth-of-type(3n+1)": "{ border-right: 5px solid black; }",
-         ".tictactoe grid > button:nth-of-type(3n+3)": "{ border-left: 5px solid black; }",
-         ".tictactoe grid > button:nth-of-type(-n+3)": "{ border-bottom: 5px solid black; }",
-         ".tictactoe grid > button:nth-last-of-type(-n+3)": "{ border-top: 5px solid black; }",
          ".tictactoe level, .tictactoe choice .fa, .tictactoe result, .tictactoe button": "{ cursor: pointer; }",
+         "body,html": "{ width: " + paddedWidth + "px; height: " + (gridWidth + 180) + "px; margin: auto; }",
       };
+
+      // Draw nicer border for classic tic-tac-toe sized-board (3x3)
+      if (this.size == 3) {
+         rules[".tictactoe grid > button:nth-of-type(3n+1)"] = "{ border-right: 5px solid black; }";
+         rules[".tictactoe grid > button:nth-of-type(3n+3)"] = "{ border-left: 5px solid black; }";
+         rules[".tictactoe grid > button:nth-of-type(-n+3)"] = "{ border-bottom: 5px solid black; }";
+         rules[".tictactoe grid > button:nth-last-of-type(-n+3)"] = "{ border-top: 5px solid black; }";
+      } else {
+         rules[".tictactoe grid > button"] = "{ border: 2px solid black; }";
+      }
 
       // Adds style rules in browser-specific way
       for (selector in rules) {
@@ -637,6 +648,12 @@ TicTacToeUI.prototype = {
          else
             sheet.addRule(selector, rules[selector]);
       }
+
+      // Add viewport meta tag for mobile, etc.
+      var viewport = document.createElement("meta");
+      viewport.id  = viewport.name = "viewport";
+      viewport.content = "width=" + paddedWidth + ", initial-scale=1.0, maximum-scale=1.0, user-scalable=0";
+      document.getElementsByTagName("head")[0].appendChild(viewport);
 
       // Create and add heading section
       var headingElem = document.createElement('heading');
