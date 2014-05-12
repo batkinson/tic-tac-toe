@@ -16,6 +16,14 @@ Player.prototype = {
 // Players
 var PLAYER = new Player('X'), COMPUTER = new Player('O');
 
+// Used to compute cost of plies
+function factorial(n) {
+   var result = 1;
+   for (var i=2; i<=n; i++) {
+      result *= i;
+   }
+   return result;
+}
 
 /**
  * Constructor for a game object. This contains all logic for tic-tac-toe.
@@ -26,6 +34,7 @@ function TicTacToe(size,lastState) {
    this.nextMove = this.getOptimalMove;
    if (typeof lastState !== "undefined") {
       // shallow copy for move speculation (state space search)
+      this.plyMax = lastState.plyMax;
       this.moveMax = lastState.moveMax;
       this.grid = lastState.grid.slice(0);
       this.lines = lastState.lines;
@@ -41,6 +50,19 @@ function TicTacToe(size,lastState) {
 }
 
 TicTacToe.prototype = {
+
+   // Returns the number moves to look ahead
+   maxPlies: function() {
+      var COMBO_MAX = factorial(8);
+      var movesLeft = this.moveMax - this.moves;
+      var plies = 0, combos = movesLeft;
+      while (combos <= COMBO_MAX && movesLeft > 0) {
+         plies++;
+         combos *= (movesLeft-1);
+         movesLeft--;
+      }
+      return plies;
+   },
 
    init: function() {
 
@@ -63,6 +85,9 @@ TicTacToe.prototype = {
       }
       this.lines.push(diag1);
       this.lines.push(diag2);
+
+      // Compute max levels of look-ahead for optimal move search
+      this.plyMax = this.maxPlies();
    },
 
    // Makes this object reusable for another game
@@ -250,7 +275,7 @@ TicTacToe.prototype = {
 
       var opponent = this.getOpponent(player);
 
-      if (this.isGameOver()) return this.scoreGrid(depth);
+      if (this.isGameOver() || depth >= this.plyMax) return this.scoreGrid(depth);
 
       for (var row=0; row<this.size; row++) {
          for (var col=0; col<this.size; col++) {
