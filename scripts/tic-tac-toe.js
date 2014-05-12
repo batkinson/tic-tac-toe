@@ -98,6 +98,14 @@ TicTacToe.prototype = {
             gridfn.call(thisObj,row,col);
    },
 
+   // Convenience method for working with win lines
+   forLines: function(linefn,thisObj) {
+      if (typeof thisObj === "undefined") thisObj = this;
+      for(var linei=0; linei<this.lines.length; linei++) {
+         linefn.call(thisObj,this.lines[linei]);
+      }
+   },
+
    // Returns the coordinates for the cells that won the game
    getWinningLine: function() {
       return this.lines[this.winningLine];
@@ -201,11 +209,28 @@ TicTacToe.prototype = {
 
    // Returns a heuristic score for this game state for the given search depth
    scoreGrid: function(depth) {
-      var winner = this.getWinner();
-      var winReward = this.moveMax + 1;
-      if (typeof winner === "undefined") return 0;
-      if (winner === PLAYER) return depth-winReward; // non-positive
-      if (winner === COMPUTER) return winReward-depth; // non-negative
+
+      var score = 0;
+
+      var scoreLine = function(line) {
+         var playercount = 0, computercount = 0;
+         for (var celli=0; celli<line.length; celli++) {
+            var player = this.getCell(line[celli][0], line[celli][1]);
+            if (player === PLAYER) 
+               playercount++;
+            else if (player === COMPUTER)
+               computercount++;
+         }
+         if (playercount > 0 && computercount > 0 ||
+               playercount == 0 && computercount == 0)
+            return;
+         // Number of uncontested moves in line squared (negative for player, positive for computer)
+         score += (computercount * computercount) - (playercount * playercount);
+      };
+
+      this.forLines(scoreLine);
+
+      return score;
    },
 
    // Returns a game state based on this one, with the specified move played
