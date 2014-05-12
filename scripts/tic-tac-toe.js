@@ -597,9 +597,22 @@ TicTacToeUI.prototype = {
 
       var thisUI = this; // For click handling closures
 
+      var head = document.getElementsByTagName('head')[0]
+
+      // Add external stylesheets required by this UI
+      var externalStyles = [ "reset.css", "rokkitt.css", "font-awesome.min.css" ];
+      for (var i=0; i<externalStyles.length; i++) {
+         var styleLoc = externalStyles[i];
+         var style = document.createElement("link");
+         style.setAttribute("rel", "stylesheet");
+         style.setAttribute("type", "text/css");
+         style.setAttribute("href", "./styles/" + styleLoc);
+         head.appendChild(style);
+      }
+
       // Add a new style element to document
       var newStyle = document.createElement('style');
-      document.getElementsByTagName('head')[0].appendChild(newStyle);
+      head.appendChild(newStyle);
 
       // Get the stylesheet we just created
       var sheet = document.styleSheets[document.styleSheets.length - 1];
@@ -653,7 +666,7 @@ TicTacToeUI.prototype = {
       var viewport = document.createElement("meta");
       viewport.id  = viewport.name = "viewport";
       viewport.content = "width=" + paddedWidth + ", initial-scale=1.0, maximum-scale=1.0, user-scalable=0";
-      document.getElementsByTagName("head")[0].appendChild(viewport);
+      head.appendChild(viewport);
 
       // Create and add heading section
       var headingElem = document.createElement('heading');
